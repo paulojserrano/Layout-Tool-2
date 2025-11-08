@@ -1,0 +1,95 @@
+/* Custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; /* slate-100 */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8; /* slate-400 */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; /* slate-500 */
+        }
+        /* Ensure canvas is responsive and doesn't overflow */
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        .helper-text {
+            font-size: 0.75rem; /* text-xs */
+            color: #64748b; /* slate-500 */
+            margin-top: -4px; /* Pull it closer to the input */
+        }
+
+        /* --- Main Tab Styles --- */
+        .main-tab-button {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #475569; /* slate-600 */
+            border-bottom: 4px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .main-tab-button.active {
+            color: #2563eb; /* blue-600 */
+            border-bottom-color: #2563eb; /* blue-600 */
+        }
+        .main-tab-content {
+            display: none;
+        }
+        /* Config/Solver tab is block (scrolls) */
+        .main-tab-content#configTabContent.active,
+        .main-tab-content#solverTabContent.active {
+            display: block;
+        }
+        /* Viz tab is flex (fills space) */
+        .main-tab-content#vizTabContent.active {
+            display: flex;
+            flex-direction: column;
+            flex: 1; /* Make the active tab content fill the space */
+        }
+
+
+        /* --- Sub-Tab Styles (within viz) --- */
+        .sub-tab-button {
+            padding: 0.75rem 1.25rem;
+            font-weight: 500;
+            color: #475569; /* slate-600 */
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .sub-tab-button.active {
+            color: #2563eb; /* blue-600 */
+            border-bottom-color: #2563eb; /* blue-6Other */
+        }
+        .sub-tab-content {
+            display: none;
+        }
+        .sub-tab-content.active {
+            display: flex; /* Changed from block */
+            flex-direction: column;
+            flex: 1; /* Make the active tab content fill the space */
+        }
+
+        /* Style for elevation drawing */
+        .elevation-label {
+            font-size: 10px;
+            font-weight: 500;
+            fill: #1e293b; /* slate-800 */
+        }
+        .elevation-error-text {
+            font-size: 16px;
+            fill: #dc2626; /* red-600 */
+            font-weight: 600;
+        }
+
+        /* --- Solver Modal Styles --- */
+        #solverModal {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
