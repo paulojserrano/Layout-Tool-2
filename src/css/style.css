@@ -42,13 +42,12 @@
         .main-tab-content {
             display: none;
         }
-        /* Config/Solver tab is block (scrolls) */
-        .main-tab-content#configTabContent.active,
-        .main-tab-content#solverTabContent.active {
+        /* Config tab is block (scrolls) */
+        .main-tab-content#configTabContent.active {
             display: block;
         }
-        /* Viz tab is flex (fills space) */
-        .main-tab-content#vizTabContent.active {
+        /* Solver tab is flex (fills space) */
+        .main-tab-content#solverTabContent.active {
             display: flex;
             flex-direction: column;
             flex: 1; /* Make the active tab content fill the space */

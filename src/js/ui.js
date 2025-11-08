@@ -81,7 +81,7 @@ export function initializeUI(redrawInputs, numberInputs) {
     resizeObserver.observe(rackDetailCanvas.parentElement);
     resizeObserver.observe(elevationCanvas.parentElement); // Add new canvas
 
-    // --- NEW: Main Tab switching logic ---
+    // --- NEW: Main Tab switching logic (now just Solver/Config) ---
     mainViewTabs.addEventListener('click', (e) => {
         if (e.target.classList.contains('main-tab-button')) {
             // Deactivate all main tabs
@@ -94,11 +94,12 @@ export function initializeUI(redrawInputs, numberInputs) {
             document.getElementById(tabId).classList.add('active');
 
             // Request a redraw to ensure the newly visible canvas is drawn
+            // (important if switching *back* to Solver tab)
             requestRedraw();
         }
     });
 
-    // --- Renamed: Sub-Tab switching logic (within Viz) ---
+    // --- Renamed: Sub-Tab switching logic (within Solver's Viz) ---
     viewSubTabs.addEventListener('click', (e) => {
         if (e.target.classList.contains('sub-tab-button')) {
             // Deactivate all sub-tabs

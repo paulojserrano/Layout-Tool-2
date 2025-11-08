@@ -34,7 +34,7 @@ export const outboundPPHInput = document.getElementById('outboundPPH');
 export const inboundWSRateInput = document.getElementById('inboundWSRate');
 export const outboundWSRateInput = document.getElementById('outboundWSRate');
 
-// Get summary elements
+// Get summary elements (on config tab)
 export const summaryTotalBays = document.getElementById('summaryTotalBays');
 export const summaryMaxLevels = document.getElementById('summaryMaxLevels'); // New
 export const summaryTotalLocations = document.getElementById('summaryTotalLocations'); // New
@@ -56,6 +56,7 @@ export const mainViewTabs = document.getElementById('mainViewTabs'); // NEW
 export const viewSubTabs = document.getElementById('viewSubTabs'); // Renamed
 
 // --- NEW: Solver Elements ---
+export const solverConfigSelect = document.getElementById('solverConfigSelect'); // NEW
 export const solverStorageReqInput = document.getElementById('solverStorageReq');
 export const solverThroughputReqInput = document.getElementById('solverThroughputReq');
 export const solverAspectRatioInput = document.getElementById('solverAspectRatio');

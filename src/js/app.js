@@ -11,10 +11,12 @@ import {
     baseBeamHeightInput, beamWidthInput, minClearanceInput,
     overheadClearanceInput, sprinklerThresholdInput, sprinklerClearanceInput,
     inboundPPHInput, outboundPPHInput, inboundWSRateInput, outboundWSRateInput,
-    solverStorageReqInput, solverThroughputReqInput, solverAspectRatioInput, solverMaxPerfDensityInput
+    solverStorageReqInput, solverThroughputReqInput, solverAspectRatioInput, solverMaxPerfDensityInput,
+    solverConfigSelect // Import new element
 } from './dom.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    // All inputs that trigger a canvas redraw
     const redrawInputs = [
         systemLengthInput, systemWidthInput, clearHeightInput,
         toteWidthInput, toteLengthInput, toteHeightInput, // Added toteHeight
@@ -31,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inboundWSRateInput, outboundWSRateInput
     ];
 
+    // All inputs that should be formatted as numbers
     const numberInputs = [
         systemLengthInput, systemWidthInput, clearHeightInput,
         toteWidthInput, toteLengthInput, toteHeightInput, // Added toteHeight
@@ -46,6 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add solver inputs
         solverStorageReqInput, solverThroughputReqInput, solverAspectRatioInput, solverMaxPerfDensityInput
     ];
+
+    // Note: solverConfigSelect is not a 'redraw' input or a 'number' input,
+    // so we don't need to add it to those arrays.
+    // Its value is read directly by the solver.
 
     initializeUI(redrawInputs, numberInputs);
     initializeSolver();

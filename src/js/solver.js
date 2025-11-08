@@ -5,7 +5,8 @@ import {
     solverResultFootprint, solverResultLocations, solverResultPerfDensity,
     applySolverButton, solverModal, solverModalMessage,
     solverModalContinue, solverModalStop, solverModalBackdrop,
-    systemLengthInput, systemWidthInput, mainViewTabs
+    systemLengthInput, systemWidthInput, mainViewTabs,
+    solverConfigSelect // Import the new select
 } from './dom.js';
 import { parseNumber, formatNumber } from './utils.js';
 import { getMetrics } from './calculations.js';
@@ -39,10 +40,17 @@ async function runSolver(continueForPerformance = false) {
     runSolverButton.disabled = true;
     applySolverButton.style.display = 'none';
 
+    // Get Solver Inputs
     const storageReq = parseNumber(solverStorageReqInput.value);
     const throughputReq = parseNumber(solverThroughputReqInput.value);
     const aspectRatio = parseNumber(solverAspectRatioInput.value) || 1.0;
     const maxDensity = parseNumber(solverMaxPerfDensityInput.value) || 50;
+    
+    // Get Selected Configuration (for future use)
+    const selectedConfig = solverConfigSelect.value;
+    // FOR NOW: The 'getMetrics' function will implicitly use the 'default' config
+    // by reading values from the Configuration tab's inputs.
+    // LATER: This 'selectedConfig' could be used to fetch different parameter sets.
 
     if (storageReq === 0 || throughputReq === 0 || aspectRatio === 0) {
         solverStatus.textContent = "Error: Please check solver inputs.";
@@ -68,7 +76,8 @@ async function runSolver(continueForPerformance = false) {
             // --- Loop 1: Find Storage ---
             currentL += step;
             let currentW = currentL / aspectRatio;
-            metrics = getMetrics(currentL, currentW);
+            // Get metrics using the *current* config params from the other tab
+            metrics = getMetrics(currentL, currentW); 
 
             if (metrics.totalLocations >= storageReq) {
                 // Found storage target
@@ -140,13 +149,15 @@ export function initializeSolver() {
 
     applySolverButton.addEventListener('click', () => {
         if (solverFinalResults) {
+            // Apply the results to the inputs on the Configuration tab
             systemLengthInput.value = formatNumber(solverFinalResults.L);
             systemWidthInput.value = formatNumber(solverFinalResults.W);
 
-            // Switch to config tab to show the change
-            mainViewTabs.querySelector('[data-tab="configTabContent"]').click();
+            // !! REMOVED: Tab-switching logic. User stays on solver screen.
+            // mainViewTabs.querySelector('[data-tab="configTabContent"]').click();
 
-            // Trigger a redraw with the new values
+            // Trigger a redraw of the canvases (which are on this tab)
+            // with the new values.
             requestRedraw();
         }
     });
