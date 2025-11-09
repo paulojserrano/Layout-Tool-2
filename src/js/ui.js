@@ -1,19 +1,26 @@
 import {
     layoutModeSelect, flueSpaceContainer, mainViewTabs, viewSubTabs,
     warehouseCanvas, rackDetailCanvas, elevationCanvas,
-    summaryTotalLocations, toteQtyPerBayInput, totesDeepSelect
+    summaryTotalLocations, toteQtyPerBayInput, totesDeepSelect,
+    // --- NEW IMPORTS ---
+    solverConfigSelect, systemLengthInput, systemWidthInput, clearHeightInput
 } from './dom.js';
 import { drawWarehouse, drawRackDetail, drawElevationView } from './drawing.js';
-import { parseNumber, formatNumber } from './utils.js'; // Added formatNumber
+// --- NEW IMPORTS ---
+import { parseNumber, formatNumber } from './utils.js';
+import { configurations } from './config.js';
 
 export let calculationResults = {
     totalBays: 0,
-    maxLevels: 0
+    maxLevels: 0,
+    // --- NEW ---
+    toteQtyPerBay: 1,
+    totesDeep: 1
 };
 
 let rafId = null; // Single RAF ID for debouncing all draw calls
 
-// --- Helper Function to Toggle Flue Space Input ---
+// ... (toggleFlueSpace - no changes) ...
 function toggleFlueSpace() {
     if (layoutModeSelect.value === 's-d-s') {
         flueSpaceContainer.style.display = 'block';
@@ -21,35 +28,50 @@ function toggleFlueSpace() {
         flueSpaceContainer.style.display = 'none';
     }
 }
-
-// --- NEW: Function to calculate combined results ---
+// --- MODIFIED: Function to calculate combined results ---
 function updateCombinedResults() {
-    const { totalBays, maxLevels } = calculationResults;
+    // Read values from the global results object
+    const { totalBays, maxLevels, toteQtyPerBay, totesDeep } = calculationResults;
 
     if (totalBays === 0 || maxLevels === 0) {
         summaryTotalLocations.textContent = '0';
         return;
     }
 
-    const totesPerBay_horiz = parseNumber(toteQtyPerBayInput.value) || 1;
-    const totesDeep = parseNumber(totesDeepSelect.value) || 1;
-
-    const totalLocations = totalBays * maxLevels * totesPerBay_horiz * totesDeep;
-
+    const totalLocations = totalBays * maxLevels * toteQtyPerBay * totesDeep;
     summaryTotalLocations.textContent = totalLocations.toLocaleString('en-US');
 }
 
 
-// --- Debounced Draw Function ---
+// --- MODIFIED: Debounced Draw Function ---
 export function requestRedraw() {
     if (rafId) {
         cancelAnimationFrame(rafId);
     }
     rafId = requestAnimationFrame(() => {
-        drawWarehouse();        // This updates calculationResults.totalBays
-        drawRackDetail();       // This one just draws
-        drawElevationView();    // This updates calculationResults.maxLevels & draws both elevations
-        updateCombinedResults(); // This uses both results to calc locations
+        // --- Get selected config ---
+        const configKey = solverConfigSelect.value;
+        const config = configurations[configKey] || null;
+
+        if (!config) {
+            console.error("Redraw requested but no config is selected.");
+            return;
+        }
+
+        // --- Get global inputs ---
+        const sysLength = parseNumber(systemLengthInput.value);
+        const sysWidth = parseNumber(systemWidthInput.value);
+        const sysHeight = parseNumber(clearHeightInput.value);
+
+        // --- Pass config to all draw functions ---
+        // These functions will now update the global `calculationResults`
+        drawWarehouse(sysLength, sysWidth, sysHeight, config);
+        drawRackDetail(sysLength, sysWidth, sysHeight, config);
+        drawElevationView(sysLength, sysWidth, sysHeight, config);
+
+        // This function now reads from `calculationResults`
+        updateCombinedResults();
+
         rafId = null;
     });
 }
@@ -68,6 +90,9 @@ export function initializeUI(redrawInputs, numberInputs) {
 
     // Apply number formatting on 'blur'
     numberInputs.forEach(input => {
+        // Don't format <select> elements
+        if (input.tagName.toLowerCase() === 'select') return;
+
         input.value = formatNumber(input.value); // Format initial
         input.addEventListener('blur', () => {
             input.value = formatNumber(input.value);
@@ -79,9 +104,9 @@ export function initializeUI(redrawInputs, numberInputs) {
     // Observe all canvas parent containers
     resizeObserver.observe(warehouseCanvas.parentElement);
     resizeObserver.observe(rackDetailCanvas.parentElement);
-    resizeObserver.observe(elevationCanvas.parentElement); // Add new canvas
+    resizeObserver.observe(elevationCanvas.parentElement);
 
-    // --- NEW: Main Tab switching logic (now just Solver/Config) ---
+    // ... (mainViewTabs logic - no changes) ...
     mainViewTabs.addEventListener('click', (e) => {
         if (e.target.classList.contains('main-tab-button')) {
             // Deactivate all main tabs
@@ -98,8 +123,7 @@ export function initializeUI(redrawInputs, numberInputs) {
             requestRedraw();
         }
     });
-
-    // --- Renamed: Sub-Tab switching logic (within Solver's Viz) ---
+    // ... (viewSubTabs logic - no changes) ...
     viewSubTabs.addEventListener('click', (e) => {
         if (e.target.classList.contains('sub-tab-button')) {
             // Deactivate all sub-tabs
@@ -115,7 +139,6 @@ export function initializeUI(redrawInputs, numberInputs) {
             requestRedraw();
         }
     });
-
     // --- Initial Setup ---
     toggleFlueSpace();
     // Initial draw is handled by the ResizeObservers

@@ -1,4 +1,5 @@
 import {
+    // Solver Tab
     solverStorageReqInput, solverThroughputReqInput,
     solverAspectRatioInput, solverMaxPerfDensityInput, runSolverButton,
     solverStatus, solverResultLength, solverResultWidth,
@@ -6,17 +7,59 @@ import {
     applySolverButton, solverModal, solverModalMessage,
     solverModalContinue, solverModalStop, solverModalBackdrop,
     systemLengthInput, systemWidthInput, mainViewTabs,
-    solverConfigSelect // Import the new select
+    solverConfigSelect,
+
+    // Config Tab Inputs (for loading values)
+    toteWidthInput, toteLengthInput, toteHeightInput,
+    toteQtyPerBayInput, totesDeepSelect,
+    toteToToteDistInput, toteToUprightDistInput, toteBackToBackDistInput,
+    uprightLengthInput, uprightWidthInput, hookAllowanceInput,
+    aisleWidthInput, setbackTopInput, setbackBottomInput,
+    layoutModeSelect, flueSpaceInput,
+    baseBeamHeightInput, beamWidthInput, minClearanceInput,
+    overheadClearanceInput, sprinklerThresholdInput, sprinklerClearanceInput
 } from './dom.js';
 import { parseNumber, formatNumber } from './utils.js';
 import { getMetrics } from './calculations.js';
 import { requestRedraw } from './ui.js';
-import { defaultConfig, configurations } from './config.js';
+import { configurations } from './config.js'; // Removed defaultConfig
 
 let solverTempResults = null;
 let solverFinalResults = null;
 
 // --- Solver Modal Controls ---
+// ... (no changes here) ...
+
+// --- NEW FUNCTION ---
+// Loads a selected configuration object into the "Configuration" tab's inputs
+function loadConfigToUI(config) {
+    if (!config) return;
+
+    // Use formatNumber to make them look nice
+    toteWidthInput.value = formatNumber(config['tote-width']);
+    toteLengthInput.value = formatNumber(config['tote-length']);
+    toteHeightInput.value = formatNumber(config['tote-height']);
+    toteQtyPerBayInput.value = formatNumber(config['tote-qty-per-bay']);
+    totesDeepSelect.value = config['totes-deep']; // This is a select, not a text input
+    toteToToteDistInput.value = formatNumber(config['tote-to-tote-dist']);
+    toteToUprightDistInput.value = formatNumber(config['tote-to-upright-dist']);
+    toteBackToBackDistInput.value = formatNumber(config['tote-back-to-back-dist']);
+    uprightLengthInput.value = formatNumber(config['upright-length']);
+    uprightWidthInput.value = formatNumber(config['upright-width']);
+    hookAllowanceInput.value = formatNumber(config['hook-allowance']);
+    aisleWidthInput.value = formatNumber(config['aisle-width']);
+    flueSpaceInput.value = formatNumber(config['flue-space']);
+    baseBeamHeightInput.value = formatNumber(config['base-beam-height']);
+    beamWidthInput.value = formatNumber(config['beam-width']);
+    minClearanceInput.value = formatNumber(config['min-clearance']);
+    overheadClearanceInput.value = formatNumber(config['overhead-clearance']);
+    sprinklerThresholdInput.value = formatNumber(config['sprinkler-threshold']);
+    sprinklerClearanceInput.value = formatNumber(config['sprinkler-clearance']);
+
+    // Note: We don't load setback/layout mode as they seem global
+}
+
+// ... (updateSolverResults function - no changes) ...
 function showSolverModal(message) {
     solverModalMessage.textContent = message;
     solverModal.style.display = 'flex';
@@ -40,21 +83,21 @@ function updateSolverResults(results) {
     
     requestRedraw();
 }
-
 // --- Solver Main Function ---
 async function runSolver(continueForPerformance = false) {
+    // ... (no changes to runSolverButton, applySolverButton) ...
     runSolverButton.disabled = true;
     applySolverButton.style.display = 'none';
-
     // Get Solver Inputs
     const storageReq = parseNumber(solverStorageReqInput.value);
     const throughputReq = parseNumber(solverThroughputReqInput.value);
     const aspectRatio = parseNumber(solverAspectRatioInput.value) || 1.0;
     const maxDensity = parseNumber(solverMaxPerfDensityInput.value) || 50;
     
-    // Get Selected Configuration (for future use)
-    const selectedConfigName = solverConfigSelect.value;
-    const selectedConfig = configurations[selectedConfigName] || defaultConfig;
+    // Get Selected Configuration
+    const selectedConfigName = solverConfigSelect.value; // e.g., "hps3-e2-650-dd"
+    // MODIFIED: Fallback to null instead of defaultConfig
+    const selectedConfig = configurations[selectedConfigName] || null;
 
     if (storageReq === 0 || throughputReq === 0 || aspectRatio === 0) {
         solverStatus.textContent = "Error: Please check solver inputs.";
@@ -62,18 +105,27 @@ async function runSolver(continueForPerformance = false) {
         return;
     }
 
+    // --- NEW: Check if config is valid ---
+    if (!selectedConfig) {
+        solverStatus.textContent = "Error: No valid configuration selected.";
+        runSolverButton.disabled = false;
+        return;
+    }
+
+    // ... (no changes to currentL, step, safetyBreak, etc.) ...
     let currentL = continueForPerformance ? solverTempResults.L : 10000; // Start at 10m
     const step = 1000; // 1m steps
     let safetyBreak = continueForPerformance ? 200 : 100; // 200m or 100m
     let storageMetResults = continueForPerformance ? solverTempResults : null;
-
+    // ... (no changes to solverLoop) ...
     if (continueForPerformance) {
         solverStatus.textContent = "Solving for performance...";
     } else {
         solverStatus.textContent = "Solving for storage...";
     }
-
-    // Use requestAnimationFrame to avoid blocking the UI
+    // Inside solverLoop, the line:
+    // metrics = getMetrics(currentL, currentW, selectedConfig);
+    // is NOW correct because selectedConfig is the full object.
     function solverLoop() {
         let metrics;
         if (!continueForPerformance) {
@@ -129,14 +181,25 @@ async function runSolver(continueForPerformance = false) {
         // Continue loop
         requestAnimationFrame(solverLoop);
     }
-
-    // Start the first iteration
+    // ... (no changes to the rest of runSolver) ...
     requestAnimationFrame(solverLoop);
 }
 
 export function initializeSolver() {
     runSolverButton.addEventListener('click', () => runSolver(false));
 
+    // --- NEW: Load config to UI on change ---
+    solverConfigSelect.addEventListener('change', () => {
+        const selectedConfig = configurations[solverConfigSelect.value] || null;
+        loadConfigToUI(selectedConfig);
+        requestRedraw(); // Redraw visualization with new config
+    });
+
+    // --- NEW: Load initial config on startup ---
+    const initialConfig = configurations[solverConfigSelect.value] || null;
+    loadConfigToUI(initialConfig);
+
+    // ... (no changes to modal listeners) ...
     solverModalStop.addEventListener('click', () => {
         hideSolverModal();
         updateSolverResults(solverTempResults); // Use the stored storage-met results
@@ -150,5 +213,4 @@ export function initializeSolver() {
     });
 
     solverModalBackdrop.addEventListener('click', hideSolverModal);
-
 }

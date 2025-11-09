@@ -1,23 +1,19 @@
 import {
     warehouseCtx, rackDetailCtx, elevationCtx,
-    toteWidthInput, toteLengthInput, toteQtyPerBayInput, totesDeepSelect,
-    toteToToteDistInput, toteToUprightDistInput, toteBackToBackDistInput,
-    uprightLengthInput, uprightWidthInput, hookAllowanceInput,
-    aisleWidthInput, systemLengthInput, systemWidthInput,
-    setbackTopInput, setbackBottomInput, layoutModeSelect, flueSpaceInput,
+    // --- REMOVED ALL CONFIG INPUTS ---
+    // --- KEPT GLOBAL INPUTS ---
+    setbackTopInput, setbackBottomInput, layoutModeSelect,
     inboundPPHInput, outboundPPHInput, inboundWSRateInput, outboundWSRateInput,
     summaryTotalBays, summaryFootprint, summaryPerfDensity,
-    summaryInboundWS, summaryOutboundWS, clearHeightInput,
-    baseBeamHeightInput, beamWidthInput, toteHeightInput, minClearanceInput,
-    overheadClearanceInput, sprinklerClearanceInput, sprinklerThresholdInput,
+    summaryInboundWS, summaryOutboundWS,
     summaryMaxLevels, warehouseCanvas, rackDetailCanvas, elevationCanvas,
-    detailViewToggle // NEW: Import toggle
+    detailViewToggle
 } from './dom.js';
 import { parseNumber } from './utils.js';
 import { calculateLayout, calculateElevationLayout } from './calculations.js';
 import { calculationResults } from './ui.js';
 
-// --- Helper Function to Draw a Rack (Top-Down View) ---
+// ... (drawRack helper - no changes) ...
 function drawRack(x_world, rackDepth_world, rackType, params) {
     const {
         ctx, scale, offsetX, offsetY,
@@ -203,8 +199,7 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
         }
     }
 }
-
-// --- Helper Function to Draw Dimensions (General) ---
+// ... (drawDimensions helper - no changes) ...
 function drawDimensions(ctx, x1, y1, drawWidth, drawHeight, sysWidth_label, sysLength_label, zoomScale = 1) {
     const extensionLength = 20 / zoomScale;
     const textPadding = 10 / zoomScale;
@@ -242,9 +237,9 @@ function drawDimensions(ctx, x1, y1, drawWidth, drawHeight, sysWidth_label, sysL
     ctx.fillText(`${Math.round(sysLength_label).toLocaleString('en-US')} mm`, 0, 0);
     ctx.restore();
 }
-
-// --- Main Drawing Function (Top-Down) ---
-export function drawWarehouse() {
+// --- MODIFIED: Main Drawing Function (Top-Down) ---
+export function drawWarehouse(sysLength, sysWidth, sysHeight, config) {
+    // ... (canvas setup - no changes) ...
     const dpr = window.devicePixelRatio || 1;
 
     // --- FIX: Read client dimensions ONCE ---
@@ -275,49 +270,47 @@ export function drawWarehouse() {
     warehouseCtx.scale(state.scale, state.scale);
 
     // --- Get Values & Calculate Bay Dimensions (Using NEW Logic) ---
-    const toteWidth = parseNumber(toteWidthInput.value) || 0; // Along bay depth
-    const toteLength = parseNumber(toteLengthInput.value) || 0; // Along bay width
-    const toteQtyPerBay = parseNumber(toteQtyPerBayInput.value) || 1;
-    const totesDeep = parseNumber(totesDeepSelect.value) || 1;
-    const toteToToteDist = parseNumber(toteToToteDistInput.value) || 0;
-    const toteToUprightDist = parseNumber(toteToUprightDistInput.value) || 0;
-    const toteBackToBackDist = parseNumber(toteBackToBackDistInput.value) || 0;
-    const uprightLength = parseNumber(uprightLengthInput.value) || 0;
-    const uprightWidth = parseNumber(uprightWidthInput.value) || 0; // NEW: Get this for detail view
-    const hookAllowance = parseNumber(hookAllowanceInput.value) || 0;
+    // Get values from the passed-in config object
+    const toteWidth = config['tote-width'] || 0;
+    const toteLength = config['tote-length'] || 0;
+    const toteQtyPerBay = config['tote-qty-per-bay'] || 1;
+    const totesDeep = config['totes-deep'] || 1;
+    const toteToToteDist = config['tote-to-tote-dist'] || 0;
+    const toteToUprightDist = config['tote-to-upright-dist'] || 0;
+    const toteBackToBackDist = config['tote-back-to-back-dist'] || 0;
+    const uprightLength = config['upright-length'] || 0;
+    const uprightWidth = config['upright-width'] || 0;
+    const hookAllowance = config['hook-allowance'] || 0;
+    const aisleWidth = config['aisle-width'] || 0;
+    const flueSpace = config['flue-space'] || 0;
 
-    // Bay Width (horizontal)
+    // Get global values (not part of config)
+    const setbackTop = parseNumber(setbackTopInput.value) || 0;
+    const setbackBottom = parseNumber(setbackBottomInput.value) || 0;
+    const layoutMode = layoutModeSelect.value;
+    const isDetailView = detailViewToggle.checked;
+
+    // --- Bay Width (horizontal) ---
     const bayWidth = (toteQtyPerBay * toteLength) +
         (2 * toteToUprightDist) +
         (Math.max(0, toteQtyPerBay - 1) * toteToToteDist) +
         (uprightLength * 2);
 
-    // Bay Depth (vertical) for a SINGLE rack
+    // --- Bay Depth (vertical) for a SINGLE rack ---
     const bayDepth = (totesDeep * toteWidth) +
         (Math.max(0, totesDeep - 1) * toteBackToBackDist) +
-        hookAllowance; // Use hook allowance
-
-    // Get other values
-    const aisleWidth = parseNumber(aisleWidthInput.value) || 0;
-    const sysLength = parseNumber(systemLengthInput.value) || 0;
-    const sysWidth = parseNumber(systemWidthInput.value) || 0;
-    const setbackTop = parseNumber(setbackTopInput.value) || 0;
-    const setbackBottom = parseNumber(setbackBottomInput.value) || 0;
-    const layoutMode = layoutModeSelect.value;
-    const flueSpace = parseNumber(flueSpaceInput.value) || 0;
-    
-    // NEW: Get detail view state
-    const isDetailView = detailViewToggle.checked;
+        hookAllowance;
 
     // --- Run Layout Calculation ---
-    // Pass the *calculated* bayWidth and bayDepth
     const layout = calculateLayout(bayWidth, bayDepth, aisleWidth, sysLength, sysWidth, layoutMode, flueSpace, setbackTop, setbackBottom);
 
     // --- Update Results Panel ---
     calculationResults.totalBays = layout.totalBays; // Update global state
+    calculationResults.toteQtyPerBay = toteQtyPerBay; // Update global state
+    calculationResults.totesDeep = totesDeep; // Update global state
     summaryTotalBays.textContent = layout.totalBays.toLocaleString('en-US');
 
-    // Get performance values
+    // ... (Performance calculations - no changes) ...
     const inboundPPH = parseNumber(inboundPPHInput.value) || 0;
     const outboundPPH = parseNumber(outboundPPHInput.value) || 0;
     // Get WS Rates
@@ -332,16 +325,11 @@ export function drawWarehouse() {
     const totalPPH = inboundPPH + outboundPPH;
     const perfDensity = (footprintM2 > 0) ? totalPPH / footprintM2 : 0;
     summaryPerfDensity.textContent = perfDensity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-    // --- Solver Calculation ---
     const reqInboundWS = (inboundWSRate > 0) ? Math.ceil(inboundPPH / inboundWSRate) : 0;
     const reqOutboundWS = (outboundWSRate > 0) ? Math.ceil(outboundPPH / outboundWSRate) : 0;
     summaryInboundWS.textContent = reqInboundWS.toLocaleString('en-US');
     summaryOutboundWS.textContent = reqOutboundWS.toLocaleString('en-US');
-
-    // --- Calculate Scaling and Centering for the content itself (independent of zoom/pan) ---
-    // This scale is for fitting the *world* content into the *initial* canvas view,
-    // before any user zoom/pan is applied.
+    // ... (Scaling and Centering - no changes) ...
     const contentPadding = 80; // Generous padding for dimensions
     const contentScaleX = (canvasWidth / state.scale - contentPadding * 2) / sysWidth;
     const contentScaleY = (canvasHeight / state.scale - contentPadding * 2) / sysLength;
@@ -362,16 +350,15 @@ export function drawWarehouse() {
     // Final offset for drawing elements (relative to the transformed canvas)
     const offsetX = drawOffsetX + (layoutOffsetX_world * contentScale);
     const offsetY = drawOffsetY;
-
-    // NEW: Create detail params object (world values)
+    // --- NEW: Create detail params object (world values) ---
     const detailParams = {
         toteWidth, toteLength, toteToToteDist, toteToUprightDist, toteBackToBackDist,
         toteQtyPerBay, totesDeep,
         uprightLength_world: uprightLength,
-        uprightWidth_world: uprightWidth // Pass this
+        uprightWidth_world: uprightWidth
     };
 
-    // Create params object for the helper function
+    // ... (Create drawParams - no changes) ...
     const drawParams = {
         ctx: warehouseCtx, scale: contentScale, offsetX, offsetY, // Use contentScale here
         bayWidth, bayDepth, // Pass calculated values
@@ -381,10 +368,7 @@ export function drawWarehouse() {
         isDetailView: isDetailView, // NEW
         detailParams: detailParams // NEW
     };
-
-    // --- Start Drawing ---
-
-    // Draw background footprint
+    // ... (Drawing logic - no changes) ...
     warehouseCtx.fillStyle = '#f8fafc'; // slate-50
     warehouseCtx.strokeStyle = '#64748b'; // slate-500
     warehouseCtx.lineWidth = 2 / state.scale; // Adjust line width for zoom
@@ -424,9 +408,7 @@ export function drawWarehouse() {
     drawDimensions(warehouseCtx, drawOffsetX, drawOffsetY, drawWidth, drawHeight, sysWidth, sysLength, state.scale); // Pass state.scale
 }
 
-// --- Rack Detail Drawing Code ---
-
-// --- Refactored Drawing Helper: Structure ---
+// ... (drawStructure helper - no changes) ...
 function drawStructure(ctx, offsetX, offsetY, drawWidth, drawHeight, scale, params) {
     const { upLength_c, upWidth_c, uprightLength_world } = params;
 
@@ -522,8 +504,7 @@ function drawStructure(ctx, offsetX, offsetY, drawWidth, drawHeight, scale, para
         ctx.stroke();
     }
 }
-
-// --- Refactored Drawing Helper: Totes ---
+// ... (drawTotes helper - no changes) ...
 function drawTotes(ctx, offsetX, offsetY, scale, params) {
     const {
         totesDeep, toteQtyPerBay,
@@ -550,8 +531,7 @@ function drawTotes(ctx, offsetX, offsetY, scale, params) {
         current_y_canvas += toteWidth_c + toteBackToBack_c;
     }
 }
-
-// --- Refactored Drawing Helper: Detail Dimensions ---
+// ... (drawDetailDimensions helper - no changes) ...
 function drawDetailDimensions(ctx, offsetX, offsetY, scale, params) {
     const {
         toteWidth, toteLength, toteToToteDist, toteToUprightDist,
@@ -635,9 +615,9 @@ function drawDetailDimensions(ctx, offsetX, offsetY, scale, params) {
     }
 }
 
-
-// --- Main Drawing Function (Rack Detail) ---
-export function drawRackDetail() {
+// --- MODIFIED: Main Drawing Function (Rack Detail) ---
+export function drawRackDetail(sysLength, sysWidth, sysHeight, config) {
+    // ... (canvas setup - no changes) ...
     const dpr = window.devicePixelRatio || 1;
 
     // --- FIX: Read client dimensions ONCE ---
@@ -660,26 +640,24 @@ export function drawRackDetail() {
     // Apply zoom and pan transformations
     ctx.translate(state.offsetX, state.offsetY);
     ctx.scale(state.scale, state.scale);
+    // --- 1. Get Values from config ---
+    const toteWidth = config['tote-width'] || 0;
+    const toteLength = config['tote-length'] || 0;
+    const toteQtyPerBay = config['tote-qty-per-bay'] || 1;
+    const totesDeep = config['totes-deep'] || 1;
+    const toteToToteDist = config['tote-to-tote-dist'] || 0;
+    const toteToUprightDist = config['tote-to-upright-dist'] || 0;
+    const toteBackToBackDist = config['tote-back-to-back-dist'] || 0;
+    const uprightLength = config['upright-length'] || 0;
+    const uprightWidth = config['upright-width'] || 0;
+    const hookAllowance = config['hook-allowance'] || 0;
 
-    // --- 1. Get Values ---
-    const toteWidth = parseNumber(toteWidthInput.value) || 0;
-    const toteLength = parseNumber(toteLengthInput.value) || 0;
-    const toteQtyPerBay = parseNumber(toteQtyPerBayInput.value) || 1;
-    const totesDeep = parseNumber(totesDeepSelect.value) || 1;
-    const toteToToteDist = parseNumber(toteToToteDistInput.value) || 0;
-    const toteToUprightDist = parseNumber(toteToUprightDistInput.value) || 0;
-    const toteBackToBackDist = parseNumber(toteBackToBackDistInput.value) || 0;
-    const uprightLength = parseNumber(uprightLengthInput.value) || 0;
-    const uprightWidth = parseNumber(uprightWidthInput.value) || 0;
-    const hookAllowance = parseNumber(hookAllowanceInput.value) || 0;
-
-    // --- 2. Calculate Bay Dimensions ---
+    // ... (Calculate Bay Dimensions - no changes) ...
     const bayWidth = (toteQtyPerBay * toteLength) + (2 * toteToUprightDist) + (Math.max(0, toteQtyPerBay - 1) * toteToToteDist) + (uprightLength * 2);
     const bayDepth_total = (totesDeep * toteWidth) + (Math.max(0, totesDeep - 1) * toteBackToBackDist) + hookAllowance;
 
     if (bayWidth === 0 || bayDepth_total === 0) return;
-
-    // --- 3. Calculate Scaling and Centering for the content itself (independent of zoom/pan) ---
+    // ... (Calculate Scaling - no changes) ...
     const contentPadding = 100; // Generous padding for detail dimensions
     const contentScaleX = (canvasWidth / state.scale - contentPadding * 2) / bayWidth;
     const contentScaleY = (canvasHeight / state.scale - contentPadding * 2) / bayDepth_total;
@@ -690,8 +668,7 @@ export function drawRackDetail() {
     const drawHeight = bayDepth_total * contentScale;
     const offsetX = (canvasWidth / state.scale - drawWidth) / 2;
     const offsetY = (canvasHeight / state.scale - drawHeight) / 2;
-
-    // --- 4. Create Parameters Object for Helpers ---
+    // ... (Create Parameters Object - no changes) ...
     const params = {
         // World values
         toteWidth, toteLength, toteToToteDist, toteToUprightDist, toteBackToBackDist,
@@ -707,10 +684,7 @@ export function drawRackDetail() {
         toteToUpright_c: toteToUprightDist * contentScale,
         toteBackToBack_c: toteBackToBackDist * contentScale
     };
-
-    // --- 5. Execute Drawing Functions in Order ---
-
-    // Draw structure first
+    // ... (Execute Drawing Functions - no changes) ...
     drawStructure(ctx, offsetX, offsetY, drawWidth, drawHeight, contentScale, params);
 
     // Draw totes on top of structure
@@ -723,10 +697,9 @@ export function drawRackDetail() {
     drawDetailDimensions(ctx, offsetX, offsetY, contentScale, params);
 }
 
-// --- NEW: Elevation View Logic ---
-
-// --- Main Drawing Function (Elevation View) ---
-export function drawElevationView() {
+// --- MODIFIED: Main Drawing Function (Elevation View) ---
+export function drawElevationView(sysLength, sysWidth, sysHeight, config) {
+    // ... (canvas setup - no changes) ...
     const dpr = window.devicePixelRatio || 1;
 
     // --- FIX: Read client dimensions ONCE ---
@@ -749,42 +722,39 @@ export function drawElevationView() {
     // Apply zoom and pan transformations
     ctx.translate(state.offsetX, state.offsetY);
     ctx.scale(state.scale, state.scale);
-
-    // --- Define Viewports ---
-    // These widths and height are now in "world" coordinates relative to the zoomed canvas
+    // ... (Define Viewports - no changes) ...
     const frontViewWidth = (canvasWidth / state.scale) / 2;
     const sideViewWidth = (canvasWidth / state.scale) / 2;
     const viewHeight = canvasHeight / state.scale;
     const frontViewOffsetX = 0;
     const sideViewOffsetX = (canvasWidth / state.scale) / 2;
     const padding = 40 / state.scale; // Adjust padding for zoom
-
-    // --- 1. Get All Input Values (as numbers) ---
+    // --- 1. Get All Input Values (from config) ---
     const inputs = {
-        WH: parseNumber(clearHeightInput.value),
-        BaseHeight: parseNumber(baseBeamHeightInput.value),
-        BW: parseNumber(beamWidthInput.value),
-        TH: parseNumber(toteHeightInput.value),
-        MC: parseNumber(minClearanceInput.value),
-        OC: parseNumber(overheadClearanceInput.value),
+        WH: sysHeight, // Use passed-in value
+        BaseHeight: config['base-beam-height'] || 0,
+        BW: config['beam-width'] || 0,
+        TH: config['tote-height'] || 0,
+        MC: config['min-clearance'] || 0,
+        OC: config['overhead-clearance'] || 0,
         // Front View
-        UW_front: parseNumber(uprightLengthInput.value), // Map uprightLength to UW
-        NT_front: parseNumber(toteQtyPerBayInput.value), // Map toteQtyPerBay to NT
-        TW_front: parseNumber(toteLengthInput.value),   // Map toteLength to TW (width along beam)
-        TTD_front: parseNumber(toteToToteDistInput.value),
-        TUD_front: parseNumber(toteToUprightDistInput.value),
+        UW_front: config['upright-length'] || 0,
+        NT_front: config['tote-qty-per-bay'] || 1,
+        TW_front: config['tote-length'] || 0,
+        TTD_front: config['tote-to-tote-dist'] || 0,
+        TUD_front: config['tote-to-upright-dist'] || 0,
         // Side View
-        UW_side: parseNumber(uprightWidthInput.value), // Upright width is the depth
-        TotesDeep: parseNumber(totesDeepSelect.value),
-        ToteDepth: parseNumber(toteWidthInput.value), // Tote width is the depth
-        ToteDepthGap: parseNumber(toteBackToBackDistInput.value),
-        HookAllowance: parseNumber(hookAllowanceInput.value),
+        UW_side: config['upright-width'] || 0,
+        TotesDeep: config['totes-deep'] || 1,
+        ToteDepth: config['tote-width'] || 0,
+        ToteDepthGap: config['tote-back-to-back-dist'] || 0,
+        HookAllowance: config['hook-allowance'] || 0,
         // Sprinkler
-        SC: parseNumber(sprinklerClearanceInput.value),
-        ST: parseNumber(sprinklerThresholdInput.value)
+        SC: config['sprinkler-clearance'] || 0,
+        ST: config['sprinkler-threshold'] || 0
     };
 
-    // --- 2. Validate Inputs ---
+    // ... (Validate Inputs - no changes) ...
     const elevationInputs = { ...inputs, UW: 0, NT: 0, TW: 0, TTD: 0, TUD: 0 }; // Pass dummy values
     if (Object.values(elevationInputs).some(v => isNaN(v) || v < 0)) {
         showErrorOnCanvas(ctx, "Please enter valid positive numbers.", canvasWidth / state.scale, canvasHeight / state.scale); // Adjust canvas dimensions for error message
@@ -803,22 +773,22 @@ export function drawElevationView() {
     }
 
     // --- 3. Calculate SHARED Vertical Layout ---
-    const layoutResult = calculateElevationLayout(elevationInputs, true); // True for even distribution
+    const layoutResult = calculateElevationLayout(inputs, true); // True for even distribution
 
+    // ... (Error checking - no changes) ...
     if (!layoutResult || layoutResult.N === 0) {
         showErrorOnCanvas(ctx, "Could not calculate layout based on inputs.", canvasWidth / state.scale, canvasHeight / state.scale); // Adjust canvas dimensions for error message
         calculationResults.maxLevels = 0; // Update global state
         summaryMaxLevels.textContent = '0';
         return;
     }
-
     const { levels, N, topToteHeight } = layoutResult;
 
     // --- 4. Update Results Display ---
     calculationResults.maxLevels = N; // Update global state
     summaryMaxLevels.textContent = N.toLocaleString('en-US');
 
-    // --- 5. Draw Separator ---
+    // ... (Drawing logic - no changes) ...
     ctx.strokeStyle = '#cbd5e1'; // slate-300
     ctx.lineWidth = 1 / state.scale; // Adjust line width for zoom
     ctx.beginPath();
@@ -986,7 +956,7 @@ export function drawElevationView() {
         }
     }
 }
-
+// ... (showErrorOnCanvas - no changes) ...
 function showErrorOnCanvas(ctx, message, canvasWidth, canvasHeight) {
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     ctx.save();
@@ -997,9 +967,7 @@ function showErrorOnCanvas(ctx, message, canvasWidth, canvasHeight) {
     ctx.fillText(message, canvasWidth / 2, canvasHeight / 2);
     ctx.restore();
 }
-
-// --- Zoom & Pan State and Logic ---
-
+// ... (Zoom & Pan Logic - no changes) ...
 const viewStates = new WeakMap();
 
 function getViewState(canvas) {
@@ -1076,10 +1044,8 @@ function applyZoomPan(canvas, drawFunction) {
     canvas.addEventListener('mouseleave', mouseLeaveHandler);
 
 }
-
-// --- Initialize Zoom/Pan for all canvases ---
 document.addEventListener('DOMContentLoaded', () => {
-    applyZoomPan(warehouseCanvas, drawWarehouse);
-    applyZoomPan(rackDetailCanvas, drawRackDetail);
-    applyZoomPan(elevationCanvas, drawElevationView);
+    applyZoomPan(warehouseCanvas, requestRedraw);
+    applyZoomPan(rackDetailCanvas, requestRedraw);
+    applyZoomPan(elevationCanvas, requestRedraw);
 });
