@@ -30,13 +30,13 @@ function populateConfigSelect() {
     solverConfigSelect.innerHTML = ''; // Clear existing static options
 
     // Create an option for each entry in the configurations object
-    for (const key in configurations) {
+    Object.keys(configurations).forEach(key => {
         const config = configurations[key];
         const option = document.createElement('option');
         option.value = key; // The value is the unique key (e.g., "hps3-e2-650-dd")
         option.textContent = config.name; // The text is the friendly name
         solverConfigSelect.appendChild(option);
-    }
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -198,18 +198,6 @@
                 <!-- Sub-Tab Content -->
                 <!-- Top-Down View Content -->
                 <div id="topDownView" class="sub-tab-content active">
-                    <!-- NEW: Detail View Toggle -->
-                    <div class="absolute top-2 right-2 z-10">
-                        <label for="detailViewToggle" class="flex items-center cursor-pointer">
-                            <span class="mr-2 text-sm font-medium text-slate-700">Detail View</span>
-                            <div class="relative">
-                                <input type="checkbox" id="detailViewToggle" class="sr-only toggle-checkbox">
-                                <div class="toggle-bg bg-slate-200 border-2 border-slate-300 h-6 w-11 rounded-full"></div>
-                                <div class="toggle-dot absolute left-1 top-1 bg-white h-4 w-4 rounded-full transition-transform"></div>
-                            </div>
-                        </label>
-                    </div>
-                    <!-- END NEW -->
                     <div class="flex-1 w-full bg-slate-50 rounded-md overflow-hidden relative"> <!-- Added relative -->
                         <canvas id="warehouseCanvas"></canvas>
                     </div>
@@ -455,10 +443,6 @@
 
         <!-- 4. Main Tab Content: Visualization (This tab is now GONE) -->
         <!-- <div id="vizTabContent" class="main-tab-content"> ... </div> -->
-
-
-        <!-- 5. NEW Main Tab Content: Solver (Old, now replaced) -->
-        <!-- <div id="solverTabContent" class="main-tab-content space-y-6 overflow-y-auto"> ... </div> -->
 
     </main>
 
