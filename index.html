@@ -3,23 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASRS Designer</title>
+    <!-- REQ 1: Title changed -->
+    <title>Layout Builder</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="src/css/style.css">
 </head>
-<!-- BODY is now h-screen and overflow-hidden -->
-<body class="bg-slate-200 min-h-screen flex flex-col font-sans">
+<!-- REQ 1: Body color softened -->
+<body class="bg-slate-50 min-h-screen flex flex-col font-sans">
 
-    <!-- Header -->
-    <header class="bg-slate-800 text-white shadow-lg z-10">
+    <!-- REQ 1: Header changed to bg-white with border -->
+    <header class="bg-white text-slate-900 shadow-sm border-b border-slate-200 z-10">
         <div class="w-full max-w-screen-2xl mx-auto p-4 md:p-6 flex items-center gap-4">
-            <!-- Logo Placeholder -->
-            <svg class="h-8 w-8 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <!-- REQ 1: Icon color updated -->
+            <svg class="h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25L3 7.5m18 0v9l-9 5.25L3 16.5v-9m9 5.25v9l-9-5.25m9 5.25v-9l9-5.25" />
             </svg>
+            <!-- REQ 1: H1 title changed -->
             <h1 class="text-xl md:text-2xl font-bold">
-                ASRS Designer
+                Layout Builder
             </h1>
         </div>
     </header>
@@ -49,8 +51,8 @@
                     <h2 class="text-lg font-semibold text-slate-900 border-b border-slate-300 pb-3 mb-5">
                         1. Requirements
                     </h2>
-                    <!-- MODIFIED: Grid changed to 3 cols -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-2"> <!-- gap-y-2 to tighten groups -->
+                    <!-- REQ 5: Grid changed to 2 cols -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2"> <!-- gap-y-2 to tighten groups -->
                         
                         <!-- Col 1: Warehouse Constraints (MOVED FROM CONFIG) -->
                         <div class="space-y-5"> <!-- Added space-y-5 for grouping -->
@@ -99,36 +101,11 @@
                                 <input type="text" id="solverAspectRatio" value="1.5" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 <p class="helper-text">e.g., 1.5 for (L = 1.5 * W)</p>
                             </div>
-                            <div>
-                                <label for="solverMaxPerfDensity" class="block text-sm font-medium text-slate-700 mb-1">Max Performance Density (PPH/m²)</label>
-                                <input type="text" id="solverMaxPerfDensity" value="50" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            </div>
+                            <!-- REQ 4: Max Performance Density input REMOVED -->
                         </div>
 
-                        <!-- Col 3: Performance (MOVED FROM CONFIG) -->
-                        <div class="space-y-5"> <!-- Added space-y-5 for grouping -->
-                            <h3 class="text-base font-semibold text-slate-900 -mb-1">Performance</h3>
-                            <!-- Inbound Presentations per Hour -->
-                            <div>
-                                <label for="inboundPPH" class="block text-sm font-medium text-slate-700 mb-1">Inbound PPH</label>
-                                <input type="text" id="inboundPPH" value="500" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            </div>
-                            <!-- Outbound Presentations per Hour -->
-                            <div>
-                                <label for="outboundPPH" class="block text-sm font-medium text-slate-700 mb-1">Outbound PPH</label>
-                                <input type="text" id="outboundPPH" value="500" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            </div>
-                            <!-- Inbound Workstation Rate -->
-                            <div>
-                                <label for="inboundWSRate" class="block text-sm font-medium text-slate-700 mb-1">Inbound WS Rate</LabeL>
-                                <input type="text" id="inboundWSRate" value="100" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            </div>
-                            <!-- Outbound Workstation Rate -->
-                            <div>
-                                <label for="outboundWSRate" class="block text-sm font-medium text-slate-700 mb-1">Outbound WS Rate</LabeL>
-                                <input type="text" id="outboundWSRate" value="100" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            </div>
-                        </div>
+                        <!-- REQ 5: Col 3 (Performance) REMOVED -->
+                        
                     </div>
                     <div class="mt-6">
                         <button id="runSolverButton" class="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 disabled:opacity-50">
@@ -198,17 +175,7 @@
                 <!-- Sub-Tab Content -->
                 <!-- Top-Down View Content -->
                 <div id="topDownView" class="sub-tab-content active">
-                    <!-- NEW: Detail View Toggle -->
-                    <div class="absolute top-2 right-2 z-10">
-                        <label for="detailViewToggle" class="flex items-center cursor-pointer">
-                            <span class="mr-2 text-sm font-medium text-slate-700">Detail View</span>
-                            <div class="relative">
-                                <input type="checkbox" id="detailViewToggle" class="sr-only toggle-checkbox">
-                                <div class="toggle-bg bg-slate-200 border-2 border-slate-300 h-6 w-11 rounded-full"></div>
-                                <div class="toggle-dot absolute left-1 top-1 bg-white h-4 w-4 rounded-full transition-transform"></div>
-                            </div>
-                        </label>
-                    </div>
+                    
                     <!-- END NEW -->
                     <div class="flex-1 w-full bg-slate-50 rounded-md overflow-hidden relative"> <!-- Added relative -->
                         <canvas id="warehouseCanvas"></canvas>
@@ -413,43 +380,8 @@
                 </div>
             </section>
 
-            <!-- Results Panel (now in config tab) -->
-            <section class="bg-white p-6 rounded-lg shadow-lg">
-                <h2 class="text-lg font-semibold text-slate-900 border-b border-slate-300 pb-3 mb-4">
-                    Config-Specific Results
-                </h2>
-                <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-x-4 gap-y-6">
-                    <div>
-                        <span class="block text-sm font-medium text-slate-500">Total Bays</span>
-                        <span id="summaryTotalBays" class="text-2xl font-bold text-blue-600">0</span>
-                    </div>
-                    <div>
-                        <span class="block text-sm font-medium text-slate-500">Max Levels</span>
-                        <span id="summaryMaxLevels" class="text-2xl font-bold text-blue-600">0</span>
-                    </div>
-                    <div>
-                        <span class="block text-sm font-medium text-slate-500">Total Locations</span>
-                        <span id="summaryTotalLocations" class="text-2xl font-bold text-blue-600">0</span>
-                    </div>
-                    <div>
-                        <span class="block text-sm font-medium text-slate-500">Footprint (m²)</span>
-                        <span id="summaryFootprint" class="text-2xl font-bold text-blue-600">0</span>
-                    </div>
-                    <div>
-                        <span class="block text-sm font-medium text-slate-500">Perf. Density (PPH / m²)</span>
-                        <span id="summaryPerfDensity" class="text-2xl font-bold text-blue-600">0.0</span>
-                    </div>
-                    <!-- Solver Results -->
-                    <div>
-                        <span class="block text-sm font-medium text-slate-500">Req. Inbound WS</span>
-                        <span id="summaryInboundWS" class="text-2xl font-bold text-green-600">0</span>
-                    </div>
-                    <div>
-                        <span class="block text-sm font-medium text-slate-500">Req. Outbound WS</span>
-                        <span id="summaryOutboundWS" class="text-2xl font-bold text-green-600">0</span>
-                    </div>
-                </div>
-            </section>
+            <!-- REQ 3: Results Panel (now in config tab) REMOVED -->
+
         </div>
 
 

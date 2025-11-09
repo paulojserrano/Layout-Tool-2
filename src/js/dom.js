@@ -28,20 +28,9 @@ export const minClearanceInput = document.getElementById('minClearance');
 export const overheadClearanceInput = document.getElementById('overheadClearance');
 export const sprinklerThresholdInput = document.getElementById('sprinklerThreshold');
 export const sprinklerClearanceInput = document.getElementById('sprinklerClearance');
-// Performance
-export const inboundPPHInput = document.getElementById('inboundPPH');
-export const outboundPPHInput = document.getElementById('outboundPPH');
-export const inboundWSRateInput = document.getElementById('inboundWSRate');
-export const outboundWSRateInput = document.getElementById('outboundWSRate');
 
-// Get summary elements (on config tab)
-export const summaryTotalBays = document.getElementById('summaryTotalBays');
-export const summaryMaxLevels = document.getElementById('summaryMaxLevels'); // New
-export const summaryTotalLocations = document.getElementById('summaryTotalLocations'); // New
-export const summaryFootprint = document.getElementById('summaryFootprint');
-export const summaryPerfDensity = document.getElementById('summaryPerfDensity');
-export const summaryInboundWS = document.getElementById('summaryInboundWS');
-export const summaryOutboundWS = document.getElementById('summaryOutboundWS');
+// REQ 5: Performance inputs removed
+// REQ 3: Summary elements removed
 
 // Get Canvases and Contexts
 export const warehouseCanvas = document.getElementById('warehouseCanvas');
@@ -60,7 +49,7 @@ export const solverConfigSelect = document.getElementById('solverConfigSelect');
 export const solverStorageReqInput = document.getElementById('solverStorageReq');
 export const solverThroughputReqInput = document.getElementById('solverThroughputReq');
 export const solverAspectRatioInput = document.getElementById('solverAspectRatio');
-export const solverMaxPerfDensityInput = document.getElementById('solverMaxPerfDensity');
+// REQ 4: solverMaxPerfDensityInput removed
 export const runSolverButton = document.getElementById('runSolverButton');
 export const solverStatus = document.getElementById('solverStatus');
 export const solverResultLength = document.getElementById('solverResultLength');

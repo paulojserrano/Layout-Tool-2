@@ -1,16 +1,9 @@
 // --- ADDED IMPORTS ---
 import { parseNumber } from './utils.js';
 import {
-    toteWidthInput, toteLengthInput, toteQtyPerBayInput, totesDeepSelect,
-    toteToToteDistInput, toteToUprightDistInput, toteBackToBackDistInput,
-    uprightLengthInput, uprightWidthInput, hookAllowanceInput,
-    aisleWidthInput, setbackTopInput, setbackBottomInput,
-    layoutModeSelect, flueSpaceInput,
-    clearHeightInput, baseBeamHeightInput, beamWidthInput,
-    toteHeightInput, minClearanceInput, overheadClearanceInput,
-    sprinklerClearanceInput, sprinklerThresholdInput
+    setbackTopInput, setbackBottomInput,
+    layoutModeSelect
 } from './dom.js';
-import { defaultConfig, configurations } from './config.js';
 // --- END ADDED IMPORTS ---
 
 import { roundUpTo50 } from './utils.js';
@@ -215,26 +208,36 @@ export function calculateElevationLayout(inputs, evenDistribution = false) {
     return { levels: evenLayout, N: maxN, topToteHeight: currentToteTop };
 }
 
-// --- NEW FUNCTION TO FIX ERROR ---
-export function getMetrics(sysLength, sysWidth, config = defaultConfig) {
-    // --- 1. Get all other inputs (top-down) ---
-    const toteWidth = config['tote-width'] ?? (parseNumber(toteWidthInput.value) || 0);
-    const toteLength = config['tote-length'] ?? (parseNumber(toteLengthInput.value) || 0);
-    const toteQtyPerBay = config['tote-qty-per-bay'] ?? (parseNumber(toteQtyPerBayInput.value) || 1);
-    const totesDeep = config['totes-deep'] ?? (parseNumber(totesDeepSelect.value) || 1);
-    const toteToToteDist = config['tote-to-tote-dist'] ?? (parseNumber(toteToToteDistInput.value) || 0);
-    const toteToUprightDist = config['tote-to-upright-dist'] ?? (parseNumber(toteToUprightDistInput.value) || 0);
-    const toteBackToBackDist = config['tote-back-to-back-dist'] ?? (parseNumber(toteBackToBackDistInput.value) || 0);
-    const uprightLength = config['upright-length'] ?? (parseNumber(uprightLengthInput.value) || 0);
-    const hookAllowance = config['hook-allowance'] ?? (parseNumber(hookAllowanceInput.value) || 0);
-    const aisleWidth = config['aisle-width'] ?? (parseNumber(aisleWidthInput.value) || 0);
-    const flueSpace = config['flue-space'] ?? (parseNumber(flueSpaceInput.value) || 0);
+// --- MODIFIED FUNCTION ---
+// This function is the core of the solver logic.
+// It should ONLY use the passed-in parameters, not read from the DOM.
+export function getMetrics(sysLength, sysWidth, sysHeight, config) {
+    if (!config) {
+        // This should not happen if solver.js is correct
+        console.error("getMetrics was called with no config.");
+        return { totalLocations: 0, footprint: 0, L: 0, W: 0 };
+    }
 
+    // --- 1. Get all parameters from the config object ---
+    const toteWidth = config['tote-width'] || 0;
+    const toteLength = config['tote-length'] || 0;
+    const toteQtyPerBay = config['tote-qty-per-bay'] || 1;
+    const totesDeep = config['totes-deep'] || 1;
+    const toteToToteDist = config['tote-to-tote-dist'] || 0;
+    const toteToUprightDist = config['tote-to-upright-dist'] || 0;
+    const toteBackToBackDist = config['tote-back-to-back-dist'] || 0;
+    const uprightLength = config['upright-length'] || 0;
+    const hookAllowance = config['hook-allowance'] || 0;
+    const aisleWidth = config['aisle-width'] || 0;
+    const flueSpace = config['flue-space'] || 0;
+
+    // --- 2. Get global parameters from DOM (via drawing.js) ---
+    // These are NOT part of the config.
     const setbackTop = parseNumber(setbackTopInput.value) || 0;
     const setbackBottom = parseNumber(setbackBottomInput.value) || 0;
     const layoutMode = layoutModeSelect.value;
 
-    // --- 2. Calculate Bay Dimensions ---
+    // --- 3. Calculate Bay Dimensions ---
     const bayWidth = (toteQtyPerBay * toteLength) +
         (2 * toteToUprightDist) +
         (Math.max(0, toteQtyPerBay - 1) * toteToToteDist) +
@@ -244,38 +247,44 @@ export function getMetrics(sysLength, sysWidth, config = defaultConfig) {
         (Math.max(0, totesDeep - 1) * toteBackToBackDist) +
         hookAllowance;
 
-    // --- 3. Calculate Layout (Total Bays) ---
+    // --- 4. Calculate Layout (Total Bays) ---
     const layout = calculateLayout(bayWidth, bayDepth, aisleWidth, sysLength, sysWidth, layoutMode, flueSpace, setbackTop, setbackBottom);
     const totalBays = layout.totalBays;
 
-    // --- 4. Get Vertical Inputs ---
-    // Note: The solver only changes L and W. We use the current clearHeight setting.
+    // --- 5. Get Vertical Inputs from config ---
     const coreElevationInputs = {
-        WH: parseNumber(clearHeightInput.value),
-        BaseHeight: config['base-beam-height'] ?? (parseNumber(baseBeamHeightInput.value) || 0),
-        BW: config['beam-width'] ?? (parseNumber(beamWidthInput.value) || 0),
-        TH: config['tote-height'] ?? (parseNumber(toteHeightInput.value) || 0),
-        MC: config['min-clearance'] ?? (parseNumber(minClearanceInput.value) || 0),
-        OC: config['overhead-clearance'] ?? (parseNumber(overheadClearanceInput.value) || 0),
-        SC: config['sprinkler-clearance'] ?? (parseNumber(sprinklerClearanceInput.value) || 0),
-        ST: config['sprinkler-threshold'] ?? (parseNumber(sprinklerThresholdInput.value) || 0)
+        WH: sysHeight, // Use passed-in height
+        BaseHeight: config['base-beam-height'] || 0,
+        BW: config['beam-width'] || 0,
+        TH: config['tote-height'] || 0,
+        MC: config['min-clearance'] || 0,
+        OC: config['overhead-clearance'] || 0,
+        SC: config['sprinkler-clearance'] || 0,
+        ST: config['sprinkler-threshold'] || 0,
+        // These are needed by calculateElevationLayout but not used by solver
+        // We pass dummy values.
+        UW_front: 0, NT_front: 0, TW_front: 0, TTD_front: 0, TUD_front: 0,
+        UW_side: 0, TotesDeep: 0, ToteDepth: 0, ToteDepthGap: 0, HookAllowance: 0,
     };
 
-    // --- 5. Calculate Elevation (Max Levels) ---
+    // --- 6. Calculate Elevation (Max Levels) ---
     const layoutResult = calculateElevationLayout(coreElevationInputs, false); // false = don't need even distribution
     const maxLevels = layoutResult ? layoutResult.N : 0;
 
-    // --- 6. Calculate Total Locations ---
+    // --- 7. Calculate Total Locations ---
     const totalLocations = totalBays * maxLevels * toteQtyPerBay * totesDeep;
 
-    // --- 7. Calculate Footprint ---
+    // --- 8. Calculate Footprint ---
     const footprint = (sysLength / 1000) * (sysWidth / 1000); // in m²
 
-    // --- 8. Return metrics object ---
+    // --- 9. Return metrics object ---
     return {
         totalLocations: totalLocations,
         footprint: footprint,
         L: sysLength,
-        W: sysWidth
+        W: sysWidth,
+        // Also return these for the results panel
+        totalBays: totalBays,
+        maxLevels: maxLevels
     };
 }

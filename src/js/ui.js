@@ -1,19 +1,21 @@
 import {
     layoutModeSelect, flueSpaceContainer, mainViewTabs, viewSubTabs,
     warehouseCanvas, rackDetailCanvas, elevationCanvas,
-    summaryTotalLocations, toteQtyPerBayInput, totesDeepSelect
+    // REQ 3: summaryTotalLocations removed
+    toteQtyPerBayInput, totesDeepSelect,
+    // --- NEW IMPORTS ---
+    solverConfigSelect, systemLengthInput, systemWidthInput, clearHeightInput
 } from './dom.js';
 import { drawWarehouse, drawRackDetail, drawElevationView } from './drawing.js';
-import { parseNumber, formatNumber } from './utils.js'; // Added formatNumber
+// --- NEW IMPORTS ---
+import { parseNumber, formatNumber } from './utils.js';
+import { configurations } from './config.js';
+import { getViewState } from './viewState.js'; // <-- ADDED IMPORT
 
-export let calculationResults = {
-    totalBays: 0,
-    maxLevels: 0
-};
-
+// REQ 3: calculationResults object removed
 let rafId = null; // Single RAF ID for debouncing all draw calls
 
-// --- Helper Function to Toggle Flue Space Input ---
+// ... (toggleFlueSpace - no changes) ...
 function toggleFlueSpace() {
     if (layoutModeSelect.value === 's-d-s') {
         flueSpaceContainer.style.display = 'block';
@@ -21,38 +23,106 @@ function toggleFlueSpace() {
         flueSpaceContainer.style.display = 'none';
     }
 }
-
-// --- NEW: Function to calculate combined results ---
-function updateCombinedResults() {
-    const { totalBays, maxLevels } = calculationResults;
-
-    if (totalBays === 0 || maxLevels === 0) {
-        summaryTotalLocations.textContent = '0';
-        return;
-    }
-
-    const totesPerBay_horiz = parseNumber(toteQtyPerBayInput.value) || 1;
-    const totesDeep = parseNumber(totesDeepSelect.value) || 1;
-
-    const totalLocations = totalBays * maxLevels * totesPerBay_horiz * totesDeep;
-
-    summaryTotalLocations.textContent = totalLocations.toLocaleString('en-US');
-}
+// REQ 3: updateCombinedResults function removed
 
 
-// --- Debounced Draw Function ---
+// --- MODIFIED: Debounced Draw Function ---
 export function requestRedraw() {
     if (rafId) {
         cancelAnimationFrame(rafId);
     }
     rafId = requestAnimationFrame(() => {
-        drawWarehouse();        // This updates calculationResults.totalBays
-        drawRackDetail();       // This one just draws
-        drawElevationView();    // This updates calculationResults.maxLevels & draws both elevations
-        updateCombinedResults(); // This uses both results to calc locations
+        // --- Get selected config ---
+        const configKey = solverConfigSelect.value;
+        const config = configurations[configKey] || null;
+
+        if (!config) {
+            console.error("Redraw requested but no config is selected.");
+            return;
+        }
+
+        // --- Get global inputs ---
+        const sysLength = parseNumber(systemLengthInput.value);
+        const sysWidth = parseNumber(systemWidthInput.value);
+        const sysHeight = parseNumber(clearHeightInput.value);
+
+        // --- Pass config to all draw functions ---
+        // REQ 3: These functions no longer update a global results object
+        drawWarehouse(sysLength, sysWidth, sysHeight, config);
+        drawRackDetail(sysLength, sysWidth, sysHeight, config);
+        drawElevationView(sysLength, sysWidth, sysHeight, config);
+
+        // REQ 3: This function call was removed
+        // updateCombinedResults();
+
         rafId = null;
     });
 }
+
+// --- NEW: Zoom & Pan Logic (Moved from drawing.js) ---
+// --- REMOVED: viewStates and getViewState (now in viewState.js) ---
+
+function applyZoomPan(canvas, drawFunction) {
+    const state = getViewState(canvas); // <-- THIS WILL NOW WORK
+
+    const wheelHandler = (event) => {
+        event.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+
+        const worldX_before = (mouseX - state.offsetX) / state.scale;
+        const worldY_before = (mouseY - state.offsetY) / state.scale;
+
+        const zoomFactor = 1.1;
+        const newScale = event.deltaY < 0 ? state.scale * zoomFactor : state.scale / zoomFactor;
+        state.scale = Math.max(0.1, Math.min(newScale, 50)); // Clamp scale
+
+        state.offsetX = mouseX - worldX_before * state.scale;
+        state.offsetY = mouseY - worldY_before * state.scale;
+
+        drawFunction();
+    };
+
+    const mouseDownHandler = (event) => {
+        state.isPanning = true;
+        state.lastPanX = event.clientX;
+        state.lastPanY = event.clientY;
+        canvas.style.cursor = 'grabbing';
+    };
+
+    const mouseMoveHandler = (event) => {
+        if (!state.isPanning) return;
+        const dx = event.clientX - state.lastPanX;
+        const dy = event.clientY - state.lastPanY;
+        state.offsetX += dx;
+        state.offsetY += dy;
+        state.lastPanX = event.clientX;
+        state.lastPanY = event.clientY;
+        drawFunction();
+    };
+
+    const mouseUpHandler = () => {
+        state.isPanning = false;
+        canvas.style.cursor = 'grab';
+    };
+    
+    const mouseLeaveHandler = () => {
+        state.isPanning = false;
+        canvas.style.cursor = 'default';
+    };
+
+
+    // Add event listeners
+    canvas.addEventListener('wheel', wheelHandler);
+    canvas.addEventListener('mousedown', mouseDownHandler);
+    canvas.addEventListener('mousemove', mouseMoveHandler);
+    canvas.addEventListener('mouseup', mouseUpHandler);
+    canvas.addEventListener('mouseleave', mouseLeaveHandler);
+
+}
+// --- END: Zoom & Pan Logic ---
+
 
 export function initializeUI(redrawInputs, numberInputs) {
     // Redraw on input change
@@ -68,6 +138,9 @@ export function initializeUI(redrawInputs, numberInputs) {
 
     // Apply number formatting on 'blur'
     numberInputs.forEach(input => {
+        // Don't format <select> elements
+        if (input.tagName.toLowerCase() === 'select') return;
+
         input.value = formatNumber(input.value); // Format initial
         input.addEventListener('blur', () => {
             input.value = formatNumber(input.value);
@@ -79,9 +152,14 @@ export function initializeUI(redrawInputs, numberInputs) {
     // Observe all canvas parent containers
     resizeObserver.observe(warehouseCanvas.parentElement);
     resizeObserver.observe(rackDetailCanvas.parentElement);
-    resizeObserver.observe(elevationCanvas.parentElement); // Add new canvas
+    resizeObserver.observe(elevationCanvas.parentElement);
 
-    // --- NEW: Main Tab switching logic (now just Solver/Config) ---
+    // --- ADDED: Apply Zoom/Pan controls ---
+    applyZoomPan(warehouseCanvas, requestRedraw);
+    applyZoomPan(rackDetailCanvas, requestRedraw);
+    applyZoomPan(elevationCanvas, requestRedraw);
+
+    // ... (mainViewTabs logic - no changes) ...
     mainViewTabs.addEventListener('click', (e) => {
         if (e.target.classList.contains('main-tab-button')) {
             // Deactivate all main tabs
@@ -98,8 +176,7 @@ export function initializeUI(redrawInputs, numberInputs) {
             requestRedraw();
         }
     });
-
-    // --- Renamed: Sub-Tab switching logic (within Solver's Viz) ---
+    // ... (viewSubTabs logic - no changes) ...
     viewSubTabs.addEventListener('click', (e) => {
         if (e.target.classList.contains('sub-tab-button')) {
             // Deactivate all sub-tabs
@@ -115,7 +192,6 @@ export function initializeUI(redrawInputs, numberInputs) {
             requestRedraw();
         }
     });
-
     // --- Initial Setup ---
     toggleFlueSpace();
     // Initial draw is handled by the ResizeObservers
