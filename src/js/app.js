@@ -1,5 +1,5 @@
 import { initializeUI } from './ui.js';
-import { initializeSolver } from './solver.js';
+import { initializeSolver, runAllConfigurationsSolver } from './solver.js'; // MODIFIED
 import { configurations } from './config.js'; // Import configurations
 import {
     // --- MAIN SOLVER TAB INPUTS ---
@@ -13,7 +13,10 @@ import {
     solverStorageReqInput, solverThroughputReqInput, solverAspectRatioInput,
 
     // --- NEW READ-ONLY CONTAINER ---
-    readOnlyConfigContainer
+    readOnlyConfigContainer,
+
+    // --- NEW COMPARISON BUTTON ---
+    runAllOptionsButton // MODIFIED
 
 } from './dom.js';
 
@@ -172,4 +175,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initializeUI(redrawInputs, numberInputs, decimalInputs); // MODIFIED
     initializeSolver();
+
+    // --- NEW: Add listener for Comparison tab button ---
+    if (runAllOptionsButton) {
+        runAllOptionsButton.addEventListener('click', () => {
+            runAllConfigurationsSolver();
+        });
+    }
 });

@@ -39,8 +39,23 @@ export const solverModalContinue = document.getElementById('solverModalContinue'
 export const solverModalStop = document.getElementById('solverModalStop');
 export const solverModalBackdrop = document.getElementById('solverModalBackdrop');
 
+// --- NEW: Solver Result Metrics ---
+export const solverResultGrossVolume = document.getElementById('solverResultGrossVolume');
+export const solverResultTotalBays = document.getElementById('solverResultTotalBays');
+export const solverResultCapacityUtil = document.getElementById('solverResultCapacityUtil');
+export const solverResultRowsAndBays = document.getElementById('solverResultRowsAndBays');
+
+
 // --- NEW: Detail View Toggle ---
 export const detailViewToggle = document.getElementById('detailViewToggle');
 
 // --- NEW: Read-Only Config Container ---
 export const readOnlyConfigContainer = document.getElementById('readOnlyConfigContainer');
+
+// --- NEW: Comparison Tab Elements ---
+export const comparisonTabButton = document.getElementById('comparisonTabButton');
+export const comparisonTabContent = document.getElementById('comparisonTabContent');
+export const runAllOptionsContainer = document.getElementById('runAllOptionsContainer');
+export const runAllOptionsButton = document.getElementById('runAllOptionsButton');
+export const runAllStatus = document.getElementById('runAllStatus');
+export const comparisonResultsContainer = document.getElementById('comparisonResultsContainer');

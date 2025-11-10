@@ -232,6 +232,7 @@ export function getMetrics(sysLength, sysWidth, sysHeight, config) {
     // --- 1. Get all parameters from the config object ---
     const toteWidth = config['tote-width'] || 0;
     const toteLength = config['tote-length'] || 0;
+    const toteHeight = config['tote-height'] || 0; // NEW
     const toteQtyPerBay = config['tote-qty-per-bay'] || 1;
     const totesDeep = config['totes-deep'] || 1;
     const toteToToteDist = config['tote-to-tote-dist'] || 0;
@@ -262,7 +263,9 @@ export function getMetrics(sysLength, sysWidth, sysHeight, config) {
     // --- 4. Calculate Layout (Total Bays) ---
     // MODIFIED: Pass uprightLength and clearOpening to calculateLayout
     const layout = calculateLayout(bayDepth, aisleWidth, sysLength, sysWidth, layoutMode, flueSpace, setbackTop, setbackBottom, uprightLength, clearOpening);
-    const totalBays = layout.totalBays;
+    
+    // --- NEW: Calculate number of rows ---
+    const numRows = (layout.baysPerRack > 0) ? (layout.totalBays / layout.baysPerRack) : 0;
 
     // --- 5. Get Vertical Inputs from config ---
     const coreElevationInputs = {
@@ -285,19 +288,31 @@ export function getMetrics(sysLength, sysWidth, sysHeight, config) {
     const maxLevels = layoutResult ? layoutResult.N : 0;
 
     // --- 7. Calculate Total Locations ---
-    const totalLocations = totalBays * maxLevels * toteQtyPerBay * totesDeep;
+    const totalLocations = layout.totalBays * maxLevels * toteQtyPerBay * totesDeep;
 
     // --- 8. Calculate Footprint ---
     const footprint = (sysLength / 1000) * (sysWidth / 1000); // in m²
+    
+    // --- NEW: Calculate Tote Volume ---
+    const toteVolume_m3 = (toteWidth / 1000) * (toteLength / 1000) * (toteHeight / 1000);
+    
+    // --- NEW: Get Max Perf Density ---
+    const maxPerfDensity = config['max-perf-density'] || 50;
 
     // --- 9. Return metrics object ---
     return {
+        // Core metrics
         totalLocations: totalLocations,
         footprint: footprint,
         L: sysLength,
         W: sysWidth,
-        // Also return these for the results panel
-        totalBays: totalBays,
-        maxLevels: maxLevels
+        
+        // Detailed metrics for display
+        totalBays: layout.totalBays,
+        baysPerRack: layout.baysPerRack,
+        numRows: numRows,
+        maxLevels: maxLevels,
+        toteVolume_m3: toteVolume_m3,
+        maxPerfDensity: maxPerfDensity
     };
 }

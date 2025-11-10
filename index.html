@@ -3,23 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- REQ 1: Title changed -->
     <title>Layout Builder</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="src/css/style.css">
 </head>
-<!-- REQ 1: Body color softened -->
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans">
 
-    <!-- REQ 1: Header changed to bg-white with border -->
     <header class="bg-white text-slate-900 shadow-sm border-b border-slate-200 z-10">
         <div class="w-full max-w-screen-2xl mx-auto p-4 md:p-6 flex items-center gap-4">
-            <!-- REQ 1: Icon color updated -->
             <svg class="h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25L3 7.5m18 0v9l-9 5.25L3 16.5v-9m9 5.25v9l-9-5.25m9 5.25v-9l9-5.25" />
             </svg>
-            <!-- REQ 1: H1 title changed -->
             <h1 class="text-xl md:text-2xl font-bold">
                 Layout Builder
             </h1>
@@ -35,12 +30,13 @@
                 <div class="flex">
                     <button class="main-tab-button active" data-tab="solverTabContent">Solver</button>
                     <button class="main-tab-button" data-tab="configTabContent">Configuration</button>
-                    <!-- Visualization Tab Removed -->
+                    <!-- NEW: Comparison Tab -->
+                    <button id="comparisonTabButton" class="main-tab-button disabled" data-tab="comparisonTabContent" disabled>Comparison</button>
                 </div>
             </div>
         </nav>
 
-        <!-- 2. NEW Main Tab Content: Solver (Active by default, contains new 3-box layout) -->
+        <!-- 2. Main Tab Content: Solver (Active by default) -->
         <div id="solverTabContent" class="main-tab-content active">
             
             <!-- Top Row: Box 1 (Inputs) & Box 2 (Results) -->
@@ -51,23 +47,19 @@
                     <h2 class="text-lg font-semibold text-slate-900 border-b border-slate-300 pb-3 mb-5">
                         1. Requirements
                     </h2>
-                    <!-- MODIFIED: Grid changed to 2 cols, setback/layout inputs removed -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2"> <!-- gap-y-2 to tighten groups -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
                         
                         <!-- Col 1: Warehouse Constraints (GLOBAL) -->
-                        <div class="space-y-5"> <!-- Added space-y-5 for grouping -->
+                        <div class="space-y-5">
                             <h3 class="text-base font-semibold text-slate-900 -mb-1">Warehouse</h3>
-                            <!-- System Length -->
                             <div>
                                 <label for="systemLength" class="block text-sm font-medium text-slate-700 mb-1">Length (mm)</label>
                                 <input type="text" id="systemLength" value="30,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
-                            <!-- System Width -->
                             <div>
                                 <label for="systemWidth" class="block text-sm font-medium text-slate-700 mb-1">Width (mm)</label>
                                 <input type="text" id="systemWidth" value="25,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
-                            <!-- Clear Height -->
                             <div>
                                 <label for="clearHeight" class="block text-sm font-medium text-slate-700 mb-1">Clear Height (mm)</label>
                                 <input type="text" id="clearHeight" value="10,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
@@ -76,9 +68,8 @@
                         </div>
 
                         <!-- Col 2: Solver Inputs (EXISTING) -->
-                        <div class="space-y-5"> <!-- Added space-y-5 for grouping -->
+                        <div class="space-y-5">
                             <h3 class="text-base font-semibold text-slate-900 -mb-1">Solver</h3>
-                            <!-- Config Selector -->
                             <div>
                                 <label for="solverConfigSelect" class="block text-sm font-medium text-slate-700 mb-1">Configuration</label>
                                 <select id="solverConfigSelect" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
@@ -86,7 +77,6 @@
                                 </select>
                                 <p class="helper-text">Uses parameters from Configuration tab.</p>
                             </div>
-                            <!-- Solver Inputs -->
                             <div>
                                 <label for="solverStorageReq" class="block text-sm font-medium text-slate-700 mb-1">Storage Requirement (Locations)</label>
                                 <input type="text" id="solverStorageReq" value="30,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
@@ -112,11 +102,13 @@
                 </section>
 
                 <!-- Box 2: Results -->
+                <!-- MODIFIED: Grid layout changed to 3 cols -->
                 <section class="bg-white p-6 rounded-lg shadow-lg">
                     <h2 class="text-lg font-semibold text-slate-900 border-b border-slate-300 pb-3 mb-5">
                         2. Results
                     </h2>
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-6">
+                        <!-- Row 1 -->
                         <div>
                             <span class="block text-sm font-medium text-slate-500">Solved Length (mm)</span>
                             <span id="solverResultLength" class="text-2xl font-bold text-blue-600">0</span>
@@ -126,16 +118,40 @@
                             <span id="solverResultWidth" class="text-2xl font-bold text-blue-600">0</span>
                         </div>
                         <div>
-                            <span class="block text-sm font-medium text-slate-500">Resulting Footprint (m²)</span>
+                            <span class="block text-sm font-medium text-slate-500">Footprint (m²)</span>
                             <span id="solverResultFootprint" class="text-2xl font-bold text-blue-600">0</span>
                         </div>
+                        
+                        <!-- Row 2 -->
                         <div>
-                            <span class="block text-sm font-medium text-slate-500">Resulting Locations</span>
+                            <span class="block text-sm font-medium text-slate-500">Locations</span>
                             <span id="solverResultLocations" class="text-2xl font-bold text-blue-600">0</span>
                         </div>
+                        <!-- NEW: Gross Storage Volume -->
                         <div>
-                            <span class="block text-sm font-medium text-slate-500">Resulting Perf. Density</span>
+                            <span class="block text-sm font-medium text-slate-500">Gross Volume (m³)</span>
+                            <span id="solverResultGrossVolume" class="text-2xl font-bold text-blue-600">0.0</span>
+                        </div>
+                        <!-- NEW: Total Bays -->
+                        <div>
+                            <span class="block text-sm font-medium text-slate-500">Total Bays</span>
+                            <span id="solverResultTotalBays" class="text-2xl font-bold text-blue-600">0</span>
+                        </div>
+
+                        <!-- Row 3 -->
+                        <div>
+                            <span class="block text-sm font-medium text-slate-500">Perf. Density</span>
                             <span id="solverResultPerfDensity" class="text-2xl font-bold text-blue-600">0.0</span>
+                        </div>
+                        <!-- NEW: Capacity Utilization -->
+                        <div>
+                            <span class="block text-sm font-medium text-slate-500">Cap. Utilization</span>
+                            <span id="solverResultCapacityUtil" class="text-2xl font-bold text-blue-600">0.0 %</span>
+                        </div>
+                        <!-- NEW: Rows x Bays/Row -->
+                        <div>
+                            <span class="block text-sm font-medium text-slate-500">Rows x Bays/Row</span>
+                            <span id="solverResultRowsAndBays" class="text-2xl font-bold text-blue-600">0 x 0</span>
                         </div>
                     </div>
                     <div class="mt-6">
@@ -147,27 +163,18 @@
 
             </div>
 
-            <!-- Bottom Row: Box 3 (Visualizations) - MOVED FROM VIZ TAB -->
+            <!-- Bottom Row: Box 3 (Visualizations) -->
             <section class="bg-white p-6 rounded-lg shadow-lg flex-1 flex flex-col overflow-hidden">
                 <div class="flex justify-between items-center pb-3 mb-4 border-b border-slate-300">
                     <h2 class="text-lg font-semibold text-slate-900">
                         3. Visualizations
                     </h2>
-                    <!-- NEW: Detail View Toggle Switch -->
                     <div class="flex items-center gap-2">
                         <input type="checkbox" id="detailViewToggle" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
                         <label for="detailViewToggle" class="text-sm font-medium text-slate-700">Show Detail View</label>
                     </div>
                 </div>
 
-                <!-- 
-                  *** MODIFICATION ***
-                  Changed to a 2x2 grid layout.
-                  Top-Down view spans 2 cols on top row.
-                  Elevation and Rack Detail are on bottom row.
-                  On mobile (default), it's a single column (grid-cols-1), so they stack.
-                  On large screens (lg:), it's a 2x2 grid.
-                -->
                 <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 lg:grid-rows-2 gap-4 overflow-hidden">
             
                     <!-- Row 1: Top-Down View (spans 2 cols on large screens) -->
@@ -175,7 +182,6 @@
                         <h3 class="text-sm font-semibold text-slate-700 bg-slate-100 px-3 py-2 border-b border-slate-200">
                             Top-Down View
                         </h3>
-                        <!-- This parent div is what the ResizeObserver watches -->
                         <div class="flex-1 w-full h-full overflow-hidden relative">
                             <canvas id="warehouseCanvas"></canvas>
                         </div>
@@ -186,7 +192,6 @@
                         <h3 class="text-sm font-semibold text-slate-700 bg-slate-100 px-3 py-2 border-b border-slate-200">
                             Elevation View
                         </h3>
-                        <!-- This parent div is what the ResizeObserver watches -->
                         <div class="flex-1 w-full h-full overflow-hidden relative">
                              <canvas id="elevationCanvas"></canvas>
                         </div>
@@ -197,21 +202,18 @@
                          <h3 class="text-sm font-semibold text-slate-700 bg-slate-100 px-3 py-2 border-b border-slate-200">
                             Rack Detail View
                         </h3>
-                        <!-- This parent div is what the ResizeObserver watches -->
                         <div class="flex-1 w-full h-full overflow-hidden relative">
                              <canvas id="rackDetailCanvas"></canvas>
                         </div>
                     </div>
                 
                 </div>
-                <!-- *** END MODIFICATION *** -->
 
             </section>
             
         </div>
 
-        <!-- 3. NEW Main Tab Content: Configuration (scrolls) -->
-        <!-- MODIFIED: This is now a simple container that app.js will populate -->
+        <!-- 3. Main Tab Content: Configuration (scrolls) -->
         <div id="configTabContent" class="main-tab-content space-y-6 overflow-y-auto">
             
             <h2 class="text-xl font-semibold text-slate-900 px-1 pt-2">
@@ -221,20 +223,45 @@
                 These are the read-only parameter sets used by the solver.
             </p>
 
-            <!-- This container will be filled by app.js -->
             <div id="readOnlyConfigContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Config cards will be injected here -->
             </div>
 
         </div>
+        
+        <!-- 4. NEW Main Tab Content: Comparison -->
+        <div id="comparisonTabContent" class="main-tab-content space-y-6 overflow-y-auto">
+            
+            <!-- Button Container -->
+            <section id="runAllOptionsContainer" class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-lg font-semibold text-slate-900 border-b border-slate-300 pb-3 mb-5">
+                    Run All Configurations
+                </h2>
+                <p class="text-slate-600 mb-4">
+                    Click the button below to run the solver against all available configurations using the same inputs from the "Solver" tab. This may take a moment.
+                </p>
+                <button id="runAllOptionsButton" class="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 disabled:opacity-50">
+                    Run All Options
+                </button>
+                <p id="runAllStatus" class="text-center text-slate-600 mt-3 h-5"></p>
+            </section>
 
-        <!-- 4. Main Tab Content: Visualization (This tab is now GONE) -->
-
-        <!-- 5. NEW Main Tab Content: Solver (Old, now replaced) -->
+            <!-- Results Grid -->
+            <section>
+                <h2 class="text-xl font-semibold text-slate-900 px-1 pt-2">
+                    Comparison Results
+                </h2>
+                <div id="comparisonResultsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                    <!-- Result cards will be injected here by solver.js -->
+                    <p class="text-slate-500 col-span-full">Run the comparison to see results.</p>
+                </div>
+            </section>
+            
+        </div>
 
     </main>
 
-    <!-- NEW: Solver Modal -->
+    <!-- Solver Modal -->
     <div id="solverModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
         <div class="absolute inset-0" id="solverModalBackdrop"></div>
         <div class="relative bg-white w-full max-w-lg p-6 rounded-lg shadow-xl">

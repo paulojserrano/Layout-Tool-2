@@ -1,23 +1,19 @@
 import {
-    // MODIFIED: Removed viewSubTabs
     mainViewTabs,
     warehouseCanvas, rackDetailCanvas, elevationCanvas,
     
     // --- NEW IMPORTS ---
-    solverConfigSelect, systemLengthInput, systemWidthInput, clearHeightInput
+    solverConfigSelect, systemLengthInput, systemWidthInput, clearHeightInput,
+    comparisonTabButton // Import new tab button
 } from './dom.js';
 import { drawWarehouse, drawRackDetail, drawElevationView } from './drawing.js';
-// --- NEW IMPORTS ---
 import { parseNumber, formatNumber, formatDecimalNumber } from './utils.js'; // MODIFIED
 import { configurations } from './config.js';
-import { getViewState } from './viewState.js'; // <-- ADDED IMPORT
+import { getViewState } from './viewState.js';
 
 let rafId = null; // Single RAF ID for debouncing all draw calls
 
-// REMOVED: toggleFlueSpace function
-
-
-// --- MODIFIED: Debounced Draw Function ---
+// --- Debounced Draw Function ---
 export function requestRedraw() {
     if (rafId) {
         cancelAnimationFrame(rafId);
@@ -28,7 +24,8 @@ export function requestRedraw() {
         const config = configurations[configKey] || null;
 
         if (!config) {
-            console.error("Redraw requested but no config is selected.");
+            // This can happen on initial load before config is populated
+            // console.warn("Redraw requested but no config is selected.");
             return;
         }
 
@@ -38,7 +35,6 @@ export function requestRedraw() {
         const sysHeight = parseNumber(clearHeightInput.value);
 
         // --- Pass config to all draw functions ---
-        // All three are drawn every time now, since they are all visible.
         drawWarehouse(sysLength, sysWidth, sysHeight, config);
         drawRackDetail(sysLength, sysWidth, sysHeight, config);
         drawElevationView(sysLength, sysWidth, sysHeight, config);
@@ -47,10 +43,9 @@ export function requestRedraw() {
     });
 }
 
-// --- NEW: Zoom & Pan Logic (Moved from drawing.js) ---
-// ... (no changes to applyZoomPan or its handlers) ...
+// --- Zoom & Pan Logic ---
 function applyZoomPan(canvas, drawFunction) {
-    const state = getViewState(canvas); // <-- THIS WILL NOW WORK
+    const state = getViewState(canvas);
 
     const wheelHandler = (event) => {
         event.preventDefault();
@@ -108,7 +103,6 @@ function applyZoomPan(canvas, drawFunction) {
     canvas.addEventListener('mouseleave', mouseLeaveHandler);
 
 }
-// --- END: Zoom & Pan Logic ---
 
 
 export function initializeUI(redrawInputs, numberInputs, decimalInputs = []) { // MODIFIED
@@ -116,8 +110,6 @@ export function initializeUI(redrawInputs, numberInputs, decimalInputs = []) { /
     redrawInputs.forEach(input => {
         input.addEventListener('input', requestRedraw);
     });
-
-    // Handle layout mode change (REMOVED)
     
     // Apply number formatting on 'blur'
     numberInputs.forEach(input => {
@@ -143,8 +135,6 @@ export function initializeUI(redrawInputs, numberInputs, decimalInputs = []) { /
 
     // Redraw on window resize
     const resizeObserver = new ResizeObserver(requestRedraw);
-    // Observe all canvas parent containers
-    // This logic still works with the new 3-column HTML structure
     resizeObserver.observe(warehouseCanvas.parentElement);
     resizeObserver.observe(rackDetailCanvas.parentElement);
     resizeObserver.observe(elevationCanvas.parentElement);
@@ -154,9 +144,10 @@ export function initializeUI(redrawInputs, numberInputs, decimalInputs = []) { /
     applyZoomPan(rackDetailCanvas, requestRedraw);
     applyZoomPan(elevationCanvas, requestRedraw);
 
-    // ... (mainViewTabs logic - no changes) ...
+    // --- Main Tab Navigation ---
     mainViewTabs.addEventListener('click', (e) => {
-        if (e.target.classList.contains('main-tab-button')) {
+        // MODIFIED: Check for disabled
+        if (e.target.classList.contains('main-tab-button') && !e.target.disabled) {
             // Deactivate all main tabs
             mainViewTabs.querySelectorAll('.main-tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.main-tab-content').forEach(content => content.classList.remove('active'));
@@ -167,16 +158,9 @@ export function initializeUI(redrawInputs, numberInputs, decimalInputs = []) { /
             document.getElementById(tabId).classList.add('active');
 
             // Request a redraw to ensure the newly visible canvas is drawn
-            // (important if switching *back* to Solver tab)
             requestRedraw();
         }
     });
 
-    /* * --- MODIFICATION ---
-     * Removed the event listener for viewSubTabs as it no longer exists.
-     */
-
-    // --- Initial Setup ---
-    // REMOVED: toggleFlueSpace();
     // Initial draw is handled by the ResizeObservers
 }
