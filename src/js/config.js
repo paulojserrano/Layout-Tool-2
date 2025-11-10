@@ -260,8 +260,8 @@ export const configurations = {
         },
         "dynamicPropName": "BayType", // NEW: For LISP export
         "layout-mode": "all-singles",
-        "top-setback": 1000,
-        "bottom-setback": 3000,
+        "top-setback": 1500,
+        "bottom-setback": 3950,
         "setback-left": 200, // NEW
         "setback-right": 200, // NEW
         "considerTunnels": false, // NEW

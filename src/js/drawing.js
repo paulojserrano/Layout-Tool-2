@@ -5,10 +5,11 @@ import {
 
     // --- ALL DOM INPUTS REMOVED ---
     
-    // --- NEW: Metric Table Imports ---
-    metricStdLocsLvl, metricStdLevels, metricStdBays, metricStdLocsTotal,
-    metricBpLocsLvl, metricBpLevels, metricBpBays, metricBpLocsTotal,
-    metricTunLocsLvl, metricTunLevels, metricTunBays, metricTunLocsTotal,
+    // --- NEW: Metric Table Imports (MODIFIED) ---
+    metricRowStdConfig, metricStdConfigLabel, metricStdConfigLocsLvl, metricStdConfigLevels, metricStdConfigBays, metricStdConfigLocsTotal,
+    metricRowStdSingle, metricStdSingleLabel, metricStdSingleLocsLvl, metricStdSingleLevels, metricStdSingleBays, metricStdSingleLocsTotal,
+    metricRowBpConfig, metricBpConfigLabel, metricBpConfigLocsLvl, metricBpConfigLevels, metricBpConfigBays, metricBpConfigLocsTotal,
+    metricRowTunConfig, metricTunConfigLabel, metricTunConfigLocsLvl, metricTunConfigLevels, metricTunConfigBays, metricTunConfigLocsTotal,
     metricTotBays, metricTotLocsTotal
 
 } from './dom.js';
@@ -405,20 +406,30 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config) {
     if (!config) {
         console.warn("drawWarehouse called with no config.");
         // NEW: Clear table if no config
-        metricStdLocsLvl.textContent = '0';
-        metricStdLevels.textContent = '0';
-        metricStdBays.textContent = '0';
-        metricStdLocsTotal.textContent = '0';
-        metricBpLocsLvl.textContent = '0';
-        metricBpLevels.textContent = '0';
-        metricBpBays.textContent = '0';
-        metricBpLocsTotal.textContent = '0';
-        metricTunLocsLvl.textContent = '0';
-        metricTunLevels.textContent = '0';
-        metricTunBays.textContent = '0';
-        metricTunLocsTotal.textContent = '0';
+        metricStdConfigLocsLvl.textContent = '0';
+        metricStdConfigLevels.textContent = '0';
+        metricStdConfigBays.textContent = '0';
+        metricStdConfigLocsTotal.textContent = '0';
+        metricStdSingleLocsLvl.textContent = '0';
+        metricStdSingleLevels.textContent = '0';
+        metricStdSingleBays.textContent = '0';
+        metricStdSingleLocsTotal.textContent = '0';
+        metricBpConfigLocsLvl.textContent = '0';
+        metricBpConfigLevels.textContent = '0';
+        metricBpConfigBays.textContent = '0';
+        metricBpConfigLocsTotal.textContent = '0';
+        metricTunConfigLocsLvl.textContent = '0';
+        metricTunConfigLevels.textContent = '0';
+        metricTunConfigBays.textContent = '0';
+        metricTunConfigLocsTotal.textContent = '0';
         metricTotBays.textContent = '0';
         metricTotLocsTotal.textContent = '0';
+        
+        // Hide all rows
+        metricRowStdConfig.style.display = 'none';
+        metricRowStdSingle.style.display = 'none';
+        metricRowBpConfig.style.display = 'none';
+        metricRowTunConfig.style.display = 'none';
         return;
     }
     
@@ -616,7 +627,65 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config) {
     }
 
 
-    // Draw dimension lines
+    // --- NEW: Helper functions for Setback/Usable Dimensions ---
+    const drawHorizontalDimLine = (ctx, x, y, width, label, zoomScale) => {
+        const tickSize = 5 / zoomScale;
+        const textPadding = 8 / zoomScale;
+        ctx.strokeStyle = '#059669'; // emerald-600
+        ctx.fillStyle = '#059669';
+        ctx.lineWidth = 1 / zoomScale;
+        ctx.font = `${10 / zoomScale}px Inter, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        
+        ctx.beginPath();
+        ctx.moveTo(x, y); ctx.lineTo(x + width, y); // Main line
+        ctx.moveTo(x, y - tickSize); ctx.lineTo(x, y + tickSize); // Left tick
+        ctx.moveTo(x + width, y - tickSize); ctx.lineTo(x + width, y + tickSize); // Right tick
+        ctx.stroke();
+        ctx.fillText(label, x + width / 2, y - textPadding);
+    };
+    
+    const drawVerticalDimLine = (ctx, x, y, height, label, zoomScale) => {
+        const tickSize = 5 / zoomScale;
+        const textPadding = 8 / zoomScale;
+        ctx.strokeStyle = '#059669'; // emerald-600
+        ctx.fillStyle = '#059669';
+        ctx.lineWidth = 1 / zoomScale;
+        ctx.font = `${10 / zoomScale}px Inter, sans-serif`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        
+        ctx.beginPath();
+        ctx.moveTo(x, y); ctx.lineTo(x, y + height); // Main line
+        ctx.moveTo(x - tickSize, y); ctx.lineTo(x + tickSize, y); // Top tick
+        ctx.moveTo(x - tickSize, y + height); ctx.lineTo(x + tickSize, y + height); // Bottom tick
+        ctx.stroke();
+        
+        ctx.save();
+        ctx.translate(x + textPadding, y + height / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = 'center';
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+    };
+
+    // --- Draw Setback & Usable Dims ---
+    const dimLineX = drawOffsetX + drawWidth + (20 / state.scale); // Right side
+    
+    if (setbackTop > 0) {
+        drawVerticalDimLine(warehouseCtx, dimLineX, drawOffsetY, setbackTop * contentScale, `Top Setback: ${formatNumber(setbackTop)}`, state.scale);
+    }
+    
+    drawVerticalDimLine(warehouseCtx, dimLineX, drawOffsetY + (setbackTop * contentScale), layout.usableLength * contentScale, `Usable Length: ${formatNumber(layout.usableLength)}`, state.scale);
+
+    if (setbackBottom > 0) {
+        drawVerticalDimLine(warehouseCtx, dimLineX, drawOffsetY + (setbackTop * contentScale) + (layout.usableLength * contentScale), setbackBottom * contentScale, `Bottom Setback: ${formatNumber(setbackBottom)}`, state.scale);
+    }
+    // --- END: Setback Dims ---
+
+
+    // Draw (original) dimension lines
     drawDimensions(warehouseCtx, drawOffsetX, drawOffsetY, drawWidth, drawHeight, sysWidth, sysLength, state.scale); // Pass state.scale
     
     // --- NEW: Update Metrics Table ---
@@ -638,8 +707,11 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config) {
         const verticalLayout = calculateElevationLayout(coreElevationInputs, false); // false = max capacity
         const verticalLevels = verticalLayout ? verticalLayout.N : 0;
         
-        // 2. Calculate locations per level (same for all bay types)
-        const locationsPerLevel = toteQtyPerBay * totesDeep;
+        // 2. Calculate locations per level
+        const configTotesDeep = config['totes-deep'] || 1;
+        const singleTotesDeep = 1;
+        const locationsPerConfigLevel = toteQtyPerBay * configTotesDeep;
+        const locationsPerSingleLevel = toteQtyPerBay * singleTotesDeep;
 
         // 3. Define levels per bay type
         const standardLevels = verticalLevels;
@@ -647,11 +719,6 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config) {
         const tunnelLevels = 5; // Hardcoded
 
         // 4. Calculate total number of bays for each type
-        const numRows = layout.layoutItems.reduce((acc, item) => {
-            if (item.type !== 'rack') return acc;
-            return acc + (item.rackType === 'double' ? 2 : 1);
-        }, 0);
-        
         const numTunnelBaysPerRow = tunnelPositions.size;
         const numBackpackBaysPerRow = backpackPositions.size;
         // Storage bays per row
@@ -659,55 +726,147 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config) {
         // Standard bays = storage bays - backpack bays
         const numStandardBaysPerRow = numStorageBaysPerRow - numBackpackBaysPerRow;
 
-        const totalStandardBays = numStandardBaysPerRow * numRows;
-        const totalBackpackBays = numBackpackBaysPerRow * numRows;
-        const totalTunnelBays = numTunnelBaysPerRow * numRows;
+        let totalStandardBays_Config = 0;
+        let totalStandardBays_Single = 0;
+        let totalBackpackBays_Config = 0;
+        let totalBackpackBays_Single = 0; // Likely 0
+        let totalTunnelBays_Config = 0;
+        let totalTunnelBays_Single = 0; // Likely 0
+
+        if (layoutMode === 'all-singles') {
+            // We need to check the width of each rack row
+            for (const item of layout.layoutItems) {
+                if (item.type !== 'rack') continue;
+                
+                // Use a tolerance for float comparison
+                const isSingleDeep = Math.abs(item.width - singleBayDepth) < 0.01;
+                
+                if (isSingleDeep) {
+                    totalStandardBays_Single += numStandardBaysPerRow;
+                    totalBackpackBays_Single += numBackpackBaysPerRow; // (unlikely)
+                    totalTunnelBays_Single += numTunnelBaysPerRow;     // (unlikely)
+                } else {
+                    // It's config-deep
+                    totalStandardBays_Config += numStandardBaysPerRow;
+                    totalBackpackBays_Config += numBackpackBaysPerRow;
+                    totalTunnelBays_Config += numTunnelBaysPerRow;
+                }
+            }
+        } else { // s-d-s mode
+            // All rows are config-deep (or double-config-deep)
+            const numRows = layout.layoutItems.reduce((acc, item) => {
+                if (item.type !== 'rack') return acc;
+                return acc + (item.rackType === 'double' ? 2 : 1);
+            }, 0);
+            
+            totalStandardBays_Config = numStandardBaysPerRow * numRows;
+            totalBackpackBays_Config = numBackpackBaysPerRow * numRows;
+            totalTunnelBays_Config = numTunnelBaysPerRow * numRows;
+        }
         
         // 5. Calculate total locations for each type
-        const totalLocationsStd = locationsPerLevel * standardLevels * totalStandardBays;
-        const totalLocationsBp = locationsPerLevel * backpackLevels * totalBackpackBays;
-        const totalLocationsTun = locationsPerLevel * tunnelLevels * totalTunnelBays;
+        const totalLocationsStd_Config = locationsPerConfigLevel * standardLevels * totalStandardBays_Config;
+        const totalLocationsStd_Single = locationsPerSingleLevel * standardLevels * totalStandardBays_Single;
+        
+        const totalLocationsBp_Config = locationsPerConfigLevel * backpackLevels * totalBackpackBays_Config;
+        const totalLocationsBp_Single = locationsPerSingleLevel * backpackLevels * totalBackpackBays_Single;
+        
+        const totalLocationsTun_Config = locationsPerConfigLevel * tunnelLevels * totalTunnelBays_Config;
+        const totalLocationsTun_Single = locationsPerSingleLevel * tunnelLevels * totalTunnelBays_Single;
         
         // 6. Calculate grand totals
-        const grandTotalBays = totalStandardBays + totalBackpackBays + totalTunnelBays;
-        const grandTotalLocations = totalLocationsStd + totalLocationsBp + totalLocationsTun;
+        const grandTotalBays = totalStandardBays_Config + totalStandardBays_Single + totalBackpackBays_Config + totalBackpackBays_Single + totalTunnelBays_Config + totalTunnelBays_Single;
+        const grandTotalLocations = totalLocationsStd_Config + totalLocationsStd_Single + totalLocationsBp_Config + totalLocationsBp_Single + totalLocationsTun_Config + totalLocationsTun_Single;
         
         // 7. Update table
-        metricStdLocsLvl.textContent = formatNumber(locationsPerLevel);
-        metricStdLevels.textContent = formatNumber(standardLevels);
-        metricStdBays.textContent = formatNumber(totalStandardBays);
-        metricStdLocsTotal.textContent = formatNumber(totalLocationsStd);
+        
+        // --- Row Labels ---
+        const stdConfigLabelText = `Standard ${toteQtyPerBay}x${configTotesDeep}x${standardLevels}`;
+        const stdSingleLabelText = `Standard ${toteQtyPerBay}x1x${standardLevels}`;
+        const bpConfigLabelText = `Backpack ${toteQtyPerBay}x${configTotesDeep}x${backpackLevels}`;
+        const tunConfigLabelText = `Tunnel ${toteQtyPerBay}x${configTotesDeep}x${tunnelLevels}`;
+        
+        // --- Update Table Content ---
+        
+        // Standard (Config) Row
+        if (totalStandardBays_Config > 0) {
+            metricRowStdConfig.style.display = ''; // Show row
+            metricStdConfigLabel.textContent = stdConfigLabelText;
+            metricStdConfigLocsLvl.textContent = formatNumber(locationsPerConfigLevel);
+            metricStdConfigLevels.textContent = formatNumber(standardLevels);
+            metricStdConfigBays.textContent = formatNumber(totalStandardBays_Config);
+            metricStdConfigLocsTotal.textContent = formatNumber(totalLocationsStd_Config);
+        } else {
+            metricRowStdConfig.style.display = 'none'; // Hide row
+        }
+        
+        // Standard (Single) Row
+        if (totalStandardBays_Single > 0) {
+            metricRowStdSingle.style.display = ''; // Show row
+            metricStdSingleLabel.textContent = stdSingleLabelText;
+            metricStdSingleLocsLvl.textContent = formatNumber(locationsPerSingleLevel);
+            metricStdSingleLevels.textContent = formatNumber(standardLevels);
+            metricStdSingleBays.textContent = formatNumber(totalStandardBays_Single);
+            metricStdSingleLocsTotal.textContent = formatNumber(totalLocationsStd_Single);
+        } else {
+            metricRowStdSingle.style.display = 'none'; // Hide row
+        }
 
-        metricBpLocsLvl.textContent = formatNumber(locationsPerLevel);
-        metricBpLevels.textContent = formatNumber(backpackLevels);
-        metricBpBays.textContent = formatNumber(totalBackpackBays);
-        metricBpLocsTotal.textContent = formatNumber(totalLocationsBp);
+        // Backpack Row (only config-deep is supported for now)
+        if (totalBackpackBays_Config > 0) {
+            metricRowBpConfig.style.display = ''; // Show row
+            metricBpConfigLabel.textContent = bpConfigLabelText;
+            metricBpConfigLocsLvl.textContent = formatNumber(locationsPerConfigLevel);
+            metricBpConfigLevels.textContent = formatNumber(backpackLevels);
+            metricBpConfigBays.textContent = formatNumber(totalBackpackBays_Config);
+            metricBpConfigLocsTotal.textContent = formatNumber(totalLocationsBp_Config);
+        } else {
+            metricRowBpConfig.style.display = 'none'; // Hide row
+        }
+        
+        // Tunnel Row (only config-deep is supported for now)
+        if (totalTunnelBays_Config > 0) {
+            metricRowTunConfig.style.display = ''; // Show row
+            metricTunConfigLabel.textContent = tunConfigLabelText;
+            metricTunConfigLocsLvl.textContent = formatNumber(locationsPerConfigLevel);
+            metricTunConfigLevels.textContent = formatNumber(tunnelLevels);
+            metricTunConfigBays.textContent = formatNumber(totalTunnelBays_Config);
+            metricTunConfigLocsTotal.textContent = formatNumber(totalLocationsTun_Config);
+        } else {
+            metricRowTunConfig.style.display = 'none'; // Hide row
+        }
 
-        metricTunLocsLvl.textContent = formatNumber(locationsPerLevel);
-        metricTunLevels.textContent = formatNumber(tunnelLevels);
-        metricTunBays.textContent = formatNumber(totalTunnelBays);
-        metricTunLocsTotal.textContent = formatNumber(totalLocationsTun);
-
+        // Total Row (always visible)
         metricTotBays.textContent = formatNumber(grandTotalBays);
         metricTotLocsTotal.textContent = formatNumber(grandTotalLocations);
 
     } catch (e) {
         console.error("Error updating metrics table:", e);
         // Clear table on error
-        metricStdLocsLvl.textContent = 'Err';
-        metricStdLevels.textContent = 'Err';
-        metricStdBays.textContent = 'Err';
-        metricStdLocsTotal.textContent = 'Err';
-        metricBpLocsLvl.textContent = 'Err';
-        metricBpLevels.textContent = 'Err';
-        metricBpBays.textContent = 'Err';
-        metricBpLocsTotal.textContent = 'Err';
-        metricTunLocsLvl.textContent = 'Err';
-        metricTunLevels.textContent = 'Err';
-        metricTunBays.textContent = 'Err';
-        metricTunLocsTotal.textContent = 'Err';
+        metricStdConfigLocsLvl.textContent = 'Err';
+        metricStdConfigLevels.textContent = 'Err';
+        metricStdConfigBays.textContent = 'Err';
+        metricStdConfigLocsTotal.textContent = 'Err';
+        metricStdSingleLocsLvl.textContent = 'Err';
+        metricStdSingleLevels.textContent = 'Err';
+        metricStdSingleBays.textContent = 'Err';
+        metricStdSingleLocsTotal.textContent = 'Err';
+        metricBpConfigLocsLvl.textContent = 'Err';
+        metricBpConfigLevels.textContent = 'Err';
+        metricBpConfigBays.textContent = 'Err';
+        metricBpConfigLocsTotal.textContent = 'Err';
+        metricTunConfigLocsLvl.textContent = 'Err';
+        metricTunConfigLevels.textContent = 'Err';
+        metricTunConfigBays.textContent = 'Err';
+        metricTunConfigLocsTotal.textContent = 'Err';
         metricTotBays.textContent = 'Err';
         metricTotLocsTotal.textContent = 'Err';
+        
+        // Hide all rows
+        metricRowStdConfig.style.display = 'none';
+        metricRowStdSingle.style.display = 'none';
+        metricRowBpConfig.style.display = 'none';
+        metricRowTunConfig.style.display = 'none';
     }
 }
 
@@ -1206,7 +1365,10 @@ export function drawElevationView(sysLength, sysWidth, sysHeight, config) {
             ctx.fillStyle = '#94a3b8'; // Left Upright
             ctx.fillRect(currentX, ceilingY, uprightWidthPx, WH * contentScale);
 
-            levels.forEach(level => {
+            // MODIFIED: Add index to forEach
+            levels.forEach((level, index) => {
+                const levelIndex = index + 1; // Level number (1-based)
+                
                 const beamY = y_coord(level.beamTop);
                 const beamHeightPx = BW * contentScale;
                 const toteY = y_coord(level.toteTop);
@@ -1226,6 +1388,18 @@ export function drawElevationView(sysLength, sysWidth, sysHeight, config) {
                     ctx.strokeRect(currentToteX, toteY, toteWidthPx, toteHeightPx);
                     currentToteX += (toteWidthPx + toteToToteDistPx);
                 }
+
+                // --- ADDED: Draw level number ---
+                ctx.fillStyle = '#1e293b'; // slate-800
+                ctx.font = `bold ${10 / state.scale}px Inter, sans-serif`;
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                // currentToteX is now *after* the last tote + gap.
+                // Go back one gap to find the right edge of the last tote.
+                const lastToteRightEdge = currentToteX - toteToToteDistPx;
+                ctx.fillText(levelIndex, lastToteRightEdge + (5 / state.scale), toteY + (toteHeightPx / 2));
+                // --- END: Draw level number ---
+
 
                 if (level.sprinklerAdded > 0) {
                     const sprinklerBoxY = y_coord(level.toteTop + MC + inputs.SC);
@@ -1298,7 +1472,10 @@ export function drawElevationView(sysLength, sysWidth, sysHeight, config) {
             ctx.fillStyle = '#94a3b8'; // Left Upright (Front)
             ctx.fillRect(rackStartX, ceilingY, uprightWidthPx, WH * contentScale);
 
-            levels.forEach(level => {
+            // MODIFIED: Add index to forEach
+            levels.forEach((level, index) => {
+                const levelIndex = index + 1; // Level number (1-based)
+
                 const toteY = y_coord(level.toteTop);
                 const toteHeightPx = TH * contentScale;
 
@@ -1314,6 +1491,15 @@ export function drawElevationView(sysLength, sysWidth, sysHeight, config) {
                     }
                     currentToteX += toteDepthPx;
                 }
+                
+                // --- ADDED: Draw level number ---
+                ctx.fillStyle = '#1e293b'; // slate-800
+                ctx.font = `bold ${10 / state.scale}px Inter, sans-serif`;
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                // currentToteX is now at the right edge of the last tote.
+                ctx.fillText(levelIndex, currentToteX + (5 / state.scale), toteY + (toteHeightPx / 2));
+                // --- END: Draw level number ---
 
                 if (level.sprinklerAdded > 0) {
                     const sprinklerBoxY = y_coord(level.toteTop + MC + SC);

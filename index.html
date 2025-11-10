@@ -180,26 +180,37 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>Standard</td>
-                                    <td><span id="metric-std-locs-lvl">0</span></td>
-                                    <td><span id="metric-std-levels">0</span></td>
-                                    <td><span id="metric-std-bays">0</span></td>
-                                    <td class="total-col"><span id="metric-std-locs-total">0</span></td>
+                                <!-- MODIFIED: Row for Standard (Config) -->
+                                <tr id="metric-row-std-config" style="display: none;">
+                                    <td id="metric-std-config-label">Standard (Config)</td>
+                                    <td><span id="metric-std-config-locs-lvl">0</span></td>
+                                    <td><span id="metric-std-config-levels">0</span></td>
+                                    <td><span id="metric-std-config-bays">0</span></td>
+                                    <td class="total-col"><span id="metric-std-config-locs-total">0</span></td>
                                 </tr>
-                                <tr>
-                                    <td>Backpack</td>
-                                    <td><span id="metric-bp-locs-lvl">0</span></td>
-                                    <td><span id="metric-bp-levels">0</span></td>
-                                    <td><span id="metric-bp-bays">0</span></td>
-                                    <td class="total-col"><span id="metric-bp-locs-total">0</span></td>
+                                <!-- NEW: Row for Standard (Single) -->
+                                <tr id="metric-row-std-single" style="display: none;">
+                                    <td id="metric-std-single-label">Standard (Single)</td>
+                                    <td><span id="metric-std-single-locs-lvl">0</span></td>
+                                    <td><span id="metric-std-single-levels">0</span></td>
+                                    <td><span id="metric-std-single-bays">0</span></td>
+                                    <td class="total-col"><span id="metric-std-single-locs-total">0</span></td>
                                 </tr>
-                                <tr>
-                                    <td>Tunnel</td>
-                                    <td><span id="metric-tun-locs-lvl">0</span></td>
-                                    <td><span id="metric-tun-levels">0</span></td>
-                                    <td><span id="metric-tun-bays">0</span></td>
-                                    <td class="total-col"><span id="metric-tun-locs-total">0</span></td>
+                                <!-- MODIFIED: Row for Backpack (Config) -->
+                                <tr id="metric-row-bp-config" style="display: none;">
+                                    <td id="metric-bp-config-label">Backpack (Config)</td>
+                                    <td><span id="metric-bp-config-locs-lvl">0</span></td>
+                                    <td><span id="metric-bp-config-levels">0</span></td>
+                                    <td><span id="metric-bp-config-bays">0</span></td>
+                                    <td class="total-col"><span id="metric-bp-config-locs-total">0</span></td>
+                                </tr>
+                                <!-- MODIFIED: Row for Tunnel (Config) -->
+                                <tr id="metric-row-tun-config" style="display: none;">
+                                    <td id="metric-tun-config-label">Tunnel (Config)</td>
+                                    <td><span id="metric-tun-config-locs-lvl">0</span></td>
+                                    <td><span id="metric-tun-config-levels">0</span></td>
+                                    <td><span id="metric-tun-config-bays">0</span></td>
+                                    <td class="total-col"><span id="metric-tun-config-locs-total">0</span></td>
                                 </tr>
                                  <tr class="total-row">
                                     <td class="font-bold">Total</td>

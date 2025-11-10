@@ -62,21 +62,34 @@ export const runAllStatus = document.getElementById('runAllStatus');
 export const comparisonResultsContainer = document.getElementById('comparisonResultsContainer');
 
 // --- NEW: Layout Metrics Table Elements ---
-// Standard Row
-export const metricStdLocsLvl = document.getElementById('metric-std-locs-lvl');
-export const metricStdLevels = document.getElementById('metric-std-levels');
-export const metricStdBays = document.getElementById('metric-std-bays');
-export const metricStdLocsTotal = document.getElementById('metric-std-locs-total');
-// Backpack Row
-export const metricBpLocsLvl = document.getElementById('metric-bp-locs-lvl');
-export const metricBpLevels = document.getElementById('metric-bp-levels');
-export const metricBpBays = document.getElementById('metric-bp-bays');
-export const metricBpLocsTotal = document.getElementById('metric-bp-locs-total');
-// Tunnel Row
-export const metricTunLocsLvl = document.getElementById('metric-tun-locs-lvl');
-export const metricTunLevels = document.getElementById('metric-tun-levels');
-export const metricTunBays = document.getElementById('metric-tun-bays');
-export const metricTunLocsTotal = document.getElementById('metric-tun-locs-total');
+// Standard (Config) Row
+export const metricRowStdConfig = document.getElementById('metric-row-std-config');
+export const metricStdConfigLabel = document.getElementById('metric-std-config-label');
+export const metricStdConfigLocsLvl = document.getElementById('metric-std-config-locs-lvl');
+export const metricStdConfigLevels = document.getElementById('metric-std-config-levels');
+export const metricStdConfigBays = document.getElementById('metric-std-config-bays');
+export const metricStdConfigLocsTotal = document.getElementById('metric-std-config-locs-total');
+// Standard (Single) Row
+export const metricRowStdSingle = document.getElementById('metric-row-std-single');
+export const metricStdSingleLabel = document.getElementById('metric-std-single-label');
+export const metricStdSingleLocsLvl = document.getElementById('metric-std-single-locs-lvl');
+export const metricStdSingleLevels = document.getElementById('metric-std-single-levels');
+export const metricStdSingleBays = document.getElementById('metric-std-single-bays');
+export const metricStdSingleLocsTotal = document.getElementById('metric-std-single-locs-total');
+// Backpack (Config) Row
+export const metricRowBpConfig = document.getElementById('metric-row-bp-config');
+export const metricBpConfigLabel = document.getElementById('metric-bp-config-label');
+export const metricBpConfigLocsLvl = document.getElementById('metric-bp-config-locs-lvl');
+export const metricBpConfigLevels = document.getElementById('metric-bp-config-levels');
+export const metricBpConfigBays = document.getElementById('metric-bp-config-bays');
+export const metricBpConfigLocsTotal = document.getElementById('metric-bp-config-locs-total');
+// Tunnel (Config) Row
+export const metricRowTunConfig = document.getElementById('metric-row-tun-config');
+export const metricTunConfigLabel = document.getElementById('metric-tun-config-label');
+export const metricTunConfigLocsLvl = document.getElementById('metric-tun-config-locs-lvl');
+export const metricTunConfigLevels = document.getElementById('metric-tun-config-levels');
+export const metricTunConfigBays = document.getElementById('metric-tun-config-bays');
+export const metricTunConfigLocsTotal = document.getElementById('metric-tun-config-locs-total');
 // Total Row
 export const metricTotBays = document.getElementById('metric-tot-bays');
 export const metricTotLocsTotal = document.getElementById('metric-tot-locs-total');
