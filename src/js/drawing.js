@@ -33,7 +33,8 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
         layoutOffsetY_world, // NEW: for layout centering
         // MODIFIED: Pass in the sets, not the flags
         tunnelPositions,
-        backpackPositions
+        backpackPositions,
+        numTunnelLevels // <<< NEWLY ADDED
     } = params;
 
     // --- NEW ---
@@ -82,6 +83,18 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
             const isTunnel = tunnelPositions.has(i);
             const isBackpack = !isTunnel && backpackPositions.has(i);
             
+            // --- NEW: Exclude tunnel if levels are 0 ---
+            if (isTunnel && numTunnelLevels === 0) {
+                // This bay is a tunnel, but tunnels have 0 levels. Skip drawing.
+                // We must still advance the Y-coordinate.
+                if (isFirstBay) {
+                    currentY_canvas += uprightLength_canvas;
+                }
+                currentY_canvas += (clearOpening_canvas + uprightLength_canvas);
+                continue; // Skip to the next bay
+            }
+            // --- END NEW ---
+
             let bayY_canvas, bayDrawWidth_canvas;
             
             if (isFirstBay) {
@@ -200,6 +213,14 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
                     const isTunnel = tunnelPositions.has(i);
                     const isBackpack = !isTunnel && backpackPositions.has(i);
                     
+                    // --- NEW: Exclude tunnel if levels are 0 ---
+                    if (isTunnel && numTunnelLevels === 0) {
+                        // This bay is a tunnel, but tunnels have 0 levels. Skip drawing.
+                        currentY_canvas += (clearOpening_canvas + uprightLength_canvas);
+                        continue; // Skip to the next bay
+                    }
+                    // --- END NEW ---
+
                     // MODIFIED: Set fillStyle based on type
                     ctx.fillStyle = isTunnel ? '#fde047' : (isBackpack ? '#a855f7' : '#cbd5e1'); // yellow, purple, or grey
                     ctx.strokeStyle = '#64748b'; // slate-500
@@ -245,6 +266,13 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
                     const isTunnel = tunnelPositions.has(i);
                     const isBackpack = !isTunnel && backpackPositions.has(i);
                     
+                    // --- NEW: Exclude tunnel if levels are 0 ---
+                    if (isTunnel && numTunnelLevels === 0) {
+                        currentY_canvas += (clearOpening_canvas + uprightLength_canvas);
+                        continue; // Skip to the next bay
+                    }
+                    // --- END NEW ---
+                    
                     ctx.fillStyle = isTunnel ? '#fde047' : (isBackpack ? '#a855f7' : '#cbd5e1'); // yellow, purple, or grey
                     ctx.strokeStyle = '#64748b'; ctx.lineWidth = 0.5;
 
@@ -273,6 +301,13 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
                 for(let i=0; i < baysPerRack; i++) {
                     const isTunnel = tunnelPositions.has(i);
                     const isBackpack = !isTunnel && backpackPositions.has(i);
+
+                    // --- NEW: Exclude tunnel if levels are 0 ---
+                    if (isTunnel && numTunnelLevels === 0) {
+                        currentY_canvas += (clearOpening_canvas + uprightLength_canvas);
+                        continue; // Skip to the next bay
+                    }
+                    // --- END NEW ---
 
                     ctx.fillStyle = isTunnel ? '#fde047' : (isBackpack ? '#a855f7' : '#cbd5e1'); // yellow, purple, or grey
                     ctx.strokeStyle = '#64748b'; ctx.lineWidth = 0.5;
@@ -369,7 +404,8 @@ function drawVerticalDimension(ctx, x, y1_c, y2_c, label, zoomScale = 1) {
 
 // --- MODIFIED: Main Drawing Function (Top-Down) ---
 // REQ 3: This function now receives the global inputs and config object
-export function drawWarehouse(sysLength, sysWidth, sysHeight, config) {
+// MODIFIED: Added solverResults argument
+export function drawWarehouse(sysLength, sysWidth, sysHeight, config, solverResults = null) {
     // ... (canvas setup - no changes) ...
     const dpr = window.devicePixelRatio || 1;
 
@@ -476,9 +512,42 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config) {
         (Math.max(0, 1 - 1) * toteBackToBackDist) +
         hookAllowance;
 
+    // --- NEW: Calculate numTunnelLevels ---
+    // This calculation must happen *before* calculateLayout
+    let numTunnelLevels;
+    const tunnelThreshold = 6500;
+    if (solverResults && solverResults.maxLevels > 0) {
+        numTunnelLevels = solverResults.numTunnelLevels; // Get from solver
+    } else {
+        // Fallback: calculate max physical levels
+        const coreElevationInputs = {
+            WH: sysHeight,
+            BaseHeight: config['base-beam-height'] || 0,
+            BW: config['beam-width'] || 0,
+            TH: config['tote-height'] || 0,
+            MC: config['min-clearance'] || 0,
+            OC: config['overhead-clearance'] || 0,
+            SC: config['sprinkler-clearance'] || 0,
+            ST: config['sprinkler-threshold'] || 0,
+            UW_front: 0, NT_front: 0, TW_front: 0, TTD_front: 0, TUD_front: 0,
+            UW_side: 0, TotesDeep: 0, ToteDepth: 0, ToteDepthGap: 0, HookAllowance: 0,
+        };
+        const hasBufferLayer = config['hasBufferLayer'] || false;
+        const verticalLayout = calculateElevationLayout(coreElevationInputs, false, hasBufferLayer);
+        const allLevels = verticalLayout ? verticalLayout.levels : [];
+        numTunnelLevels = allLevels.filter(level => level.beamBottom >= tunnelThreshold).length;
+    }
+    // --- END: Calculate numTunnelLevels ---
+    
+    // --- NEW: Determine effective considerTunnels flag ---
+    // Pass the original config flag to calculateLayout so positions are created
+    const configConsiderTunnels = config['considerTunnels'] || false;
+    // Use a separate flag for metrics and drawing, which depends on levels
+    const effectiveConsiderTunnels = configConsiderTunnels && numTunnelLevels > 0;
+
     // --- Run Layout Calculation ---
-    // MODIFIED: Call calculateLayout with new params
-    const layout = calculateLayout(configBayDepth, singleBayDepth, aisleWidth, sysLength, sysWidth, layoutMode, flueSpace, setbackTop, setbackBottom, setbackLeft, setbackRight, uprightLength, clearOpening, considerTunnels);
+    // MODIFIED: Pass configConsiderTunnels to ensure layout spacing is correct
+    const layout = calculateLayout(configBayDepth, singleBayDepth, aisleWidth, sysLength, sysWidth, layoutMode, flueSpace, setbackTop, setbackBottom, setbackLeft, setbackRight, uprightLength, clearOpening, configConsiderTunnels);
 
     // --- Calculate Scaling and Centering for the content itself (independent of zoom/pan) ---
     const contentPadding = 80; // Generous padding for dimensions
@@ -515,10 +584,12 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config) {
         hookAllowance_world: hookAllowance // Used by rack detail
     };
 
+
     // --- NEW: Generate Tunnel/Backpack Sets ---
     // This logic is moved from drawRack to here
     let tunnelPositions = new Set();
-    if (considerTunnels) {
+    // Generate positions based on the CONFIG flag, regardless of levels
+    if (configConsiderTunnels) {
         const numTunnelBays = Math.floor(layout.baysPerRack / 9);
         if (numTunnelBays > 0) {
             const spacing = (layout.baysPerRack + 1) / (numTunnelBays + 1);
@@ -569,7 +640,8 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config) {
         baysPerRack: layout.baysPerRack, // NEW
         clearOpening_world: layout.clearOpening, // NEW
         tunnelPositions: tunnelPositions, // NEW
-        backpackPositions: backpackPositions // NEW
+        backpackPositions: backpackPositions, // NEW
+        numTunnelLevels: numTunnelLevels // <<< NEWLY ADDED
     };
     
     // ... (Drawing logic - no changes) ...
@@ -690,22 +762,44 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config) {
     
     // --- NEW: Update Metrics Table ---
     try {
-        // 1. Get Vertical Levels (using existing elevation calc)
-        const coreElevationInputs = {
-            WH: sysHeight,
-            BaseHeight: config['base-beam-height'] || 0,
-            BW: config['beam-width'] || 0,
-            TH: config['tote-height'] || 0,
-            MC: config['min-clearance'] || 0,
-            OC: config['overhead-clearance'] || 0,
-            SC: config['sprinkler-clearance'] || 0,
-            ST: config['sprinkler-threshold'] || 0,
-            // Dummy values
-            UW_front: 0, NT_front: 0, TW_front: 0, TTD_front: 0, TUD_front: 0,
-            UW_side: 0, TotesDeep: 0, ToteDepth: 0, ToteDepthGap: 0, HookAllowance: 0,
-        };
-        const verticalLayout = calculateElevationLayout(coreElevationInputs, false); // false = max capacity
-        const verticalLevels = verticalLayout ? verticalLayout.N : 0;
+        // --- MODIFICATION START: Get numTunnelLevels ---
+        let verticalLevels;
+        // We already calculated numTunnelLevels above
+        const tunnelThreshold = 6500; // NEW
+
+        if (solverResults && solverResults.maxLevels > 0) {
+            verticalLevels = solverResults.maxLevels;
+            // numTunnelLevels is already set
+        } else {
+            // Fallback: calculate max physical levels
+            const coreElevationInputs = {
+                WH: sysHeight,
+                BaseHeight: config['base-beam-height'] || 0,
+                BW: config['beam-width'] || 0,
+                TH: config['tote-height'] || 0,
+                MC: config['min-clearance'] || 0,
+                OC: config['overhead-clearance'] || 0,
+                SC: config['sprinkler-clearance'] || 0,
+                ST: config['sprinkler-threshold'] || 0,
+                // Dummy values
+                UW_front: 0, NT_front: 0, TW_front: 0, TTD_front: 0, TUD_front: 0,
+                UW_side: 0, TotesDeep: 0, ToteDepth: 0, ToteDepthGap: 0, HookAllowance: 0,
+            };
+            const hasBufferLayer = config['hasBufferLayer'] || false;
+            const verticalLayout = calculateElevationLayout(coreElevationInputs, false, hasBufferLayer); // false = max capacity
+            verticalLevels = verticalLayout ? verticalLayout.N : 0;
+            // numTunnelLevels is already set
+        }
+        // --- MODIFICATION END ---
+        
+        // --- MODIFICATION START: Account for Buffer Layer ---
+        const hasBufferLayer = config['hasBufferLayer'] || false;
+        let storageLevels = verticalLevels;
+        if (hasBufferLayer && verticalLevels > 0) {
+            storageLevels = verticalLevels - 1;
+        }
+        if (storageLevels < 0) storageLevels = 0;
+        // --- MODIFICATION END ---
         
         // 2. Calculate locations per level
         const configTotesDeep = config['totes-deep'] || 1;
@@ -714,11 +808,12 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config) {
         const locationsPerSingleLevel = toteQtyPerBay * singleTotesDeep;
 
         // 3. Define levels per bay type
-        const standardLevels = verticalLevels;
-        const backpackLevels = verticalLevels;
-        const tunnelLevels = 5; // Hardcoded
+        const standardLevels = storageLevels; // MODIFIED: Use storageLevels
+        const backpackLevels = storageLevels; // MODIFIED: Use storageLevels
+        const tunnelLevels = numTunnelLevels; // MODIFIED: Use calculated value
 
         // 4. Calculate total number of bays for each type
+        // MODIFIED: Use the tunnelPositions set which was generated based on config
         const numTunnelBaysPerRow = tunnelPositions.size;
         const numBackpackBaysPerRow = backpackPositions.size;
         // Storage bays per row
@@ -771,6 +866,7 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config) {
         const totalLocationsBp_Config = locationsPerConfigLevel * backpackLevels * totalBackpackBays_Config;
         const totalLocationsBp_Single = locationsPerSingleLevel * backpackLevels * totalBackpackBays_Single;
         
+        // MODIFIED: This calculation is correct. If tunnelLevels is 0, locations is 0.
         const totalLocationsTun_Config = locationsPerConfigLevel * tunnelLevels * totalTunnelBays_Config;
         const totalLocationsTun_Single = locationsPerSingleLevel * tunnelLevels * totalTunnelBays_Single;
         
@@ -781,10 +877,11 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config) {
         // 7. Update table
         
         // --- Row Labels ---
-        const stdConfigLabelText = `Standard ${toteQtyPerBay}x${configTotesDeep}x${standardLevels}`;
-        const stdSingleLabelText = `Standard ${toteQtyPerBay}x1x${standardLevels}`;
-        const bpConfigLabelText = `Backpack ${toteQtyPerBay}x${configTotesDeep}x${backpackLevels}`;
-        const tunConfigLabelText = `Tunnel ${toteQtyPerBay}x${configTotesDeep}x${tunnelLevels}`;
+        // MODIFIED: These labels now correctly reflect the storage levels
+        const stdConfigLabelText = `Standard ${toteQtyPerBay}x${configTotesDeep}x${storageLevels}`;
+        const stdSingleLabelText = `Standard ${toteQtyPerBay}x1x${storageLevels}`;
+        const bpConfigLabelText = `Backpack ${toteQtyPerBay}x${configTotesDeep}x${storageLevels}`;
+        const tunConfigLabelText = `Tunnel ${toteQtyPerBay}x${configTotesDeep}x${tunnelLevels}`; // MODIFIED
         
         // --- Update Table Content ---
         
@@ -793,7 +890,7 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config) {
             metricRowStdConfig.style.display = ''; // Show row
             metricStdConfigLabel.textContent = stdConfigLabelText;
             metricStdConfigLocsLvl.textContent = formatNumber(locationsPerConfigLevel);
-            metricStdConfigLevels.textContent = formatNumber(standardLevels);
+            metricStdConfigLevels.textContent = formatNumber(storageLevels); // MODIFIED
             metricStdConfigBays.textContent = formatNumber(totalStandardBays_Config);
             metricStdConfigLocsTotal.textContent = formatNumber(totalLocationsStd_Config);
         } else {
@@ -805,7 +902,7 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config) {
             metricRowStdSingle.style.display = ''; // Show row
             metricStdSingleLabel.textContent = stdSingleLabelText;
             metricStdSingleLocsLvl.textContent = formatNumber(locationsPerSingleLevel);
-            metricStdSingleLevels.textContent = formatNumber(standardLevels);
+            metricStdSingleLevels.textContent = formatNumber(storageLevels); // MODIFIED
             metricStdSingleBays.textContent = formatNumber(totalStandardBays_Single);
             metricStdSingleLocsTotal.textContent = formatNumber(totalLocationsStd_Single);
         } else {
@@ -817,7 +914,7 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config) {
             metricRowBpConfig.style.display = ''; // Show row
             metricBpConfigLabel.textContent = bpConfigLabelText;
             metricBpConfigLocsLvl.textContent = formatNumber(locationsPerConfigLevel);
-            metricBpConfigLevels.textContent = formatNumber(backpackLevels);
+            metricBpConfigLevels.textContent = formatNumber(storageLevels); // MODIFIED
             metricBpConfigBays.textContent = formatNumber(totalBackpackBays_Config);
             metricBpConfigLocsTotal.textContent = formatNumber(totalLocationsBp_Config);
         } else {
@@ -825,16 +922,18 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config) {
         }
         
         // Tunnel Row (only config-deep is supported for now)
-        if (totalTunnelBays_Config > 0) {
+        // --- MODIFIED: Hide if tunnelLevels is 0 ---
+        if (totalTunnelBays_Config > 0 && tunnelLevels > 0) {
             metricRowTunConfig.style.display = ''; // Show row
-            metricTunConfigLabel.textContent = tunConfigLabelText;
+            metricTunConfigLabel.textContent = tunConfigLabelText; // MODIFIED
             metricTunConfigLocsLvl.textContent = formatNumber(locationsPerConfigLevel);
-            metricTunConfigLevels.textContent = formatNumber(tunnelLevels);
+            metricTunConfigLevels.textContent = formatNumber(tunnelLevels); // MODIFIED
             metricTunConfigBays.textContent = formatNumber(totalTunnelBays_Config);
             metricTunConfigLocsTotal.textContent = formatNumber(totalLocationsTun_Config);
         } else {
             metricRowTunConfig.style.display = 'none'; // Hide row
         }
+        // --- END MODIFICATION ---
 
         // Total Row (always visible)
         metricTotBays.textContent = formatNumber(grandTotalBays);
@@ -1118,7 +1217,8 @@ function drawDetailDimensions(ctx, offsetX, offsetY, scale, params) {
 
 // --- MODIFIED: Main Drawing Function (Rack Detail) ---
 // REQ 3: This function now receives the global inputs and config object
-export function drawRackDetail(sysLength, sysWidth, sysHeight, config) {
+// MODIFIED: Added solverResults argument (but it's not used)
+export function drawRackDetail(sysLength, sysWidth, sysHeight, config, solverResults = null) {
     // ... (canvas setup - no changes) ...
     const dpr = window.devicePixelRatio || 1;
 
@@ -1213,7 +1313,8 @@ export function drawRackDetail(sysLength, sysWidth, sysHeight, config) {
 
 // --- MODIFIED: Main Drawing Function (Elevation View) ---
 // REQ 3: This function now receives the global inputs and config object
-export function drawElevationView(sysLength, sysWidth, sysHeight, config) {
+// MODIFIED: Added solverResults argument (but it's not used)
+export function drawElevationView(sysLength, sysWidth, sysHeight, config, solverResults = null) {
     // ... (canvas setup - no changes) ...
     const dpr = window.devicePixelRatio || 1;
 
@@ -1274,6 +1375,10 @@ export function drawElevationView(sysLength, sysWidth, sysHeight, config) {
         SC: config['sprinkler-clearance'] || 0,
         ST: config['sprinkler-threshold'] || 0
     };
+    
+    // --- NEW: Get hasBufferLayer flag ---
+    const hasBufferLayer = config['hasBufferLayer'] || false;
+
 
     // ... (Validate Inputs - no changes) ...
     // Check for NaN or negative values in the core inputs
@@ -1294,7 +1399,8 @@ export function drawElevationView(sysLength, sysWidth, sysHeight, config) {
     }
 
     // --- 3. Calculate SHARED Vertical Layout ---
-    const layoutResult = calculateElevationLayout(inputs, true); // True for even distribution
+    // MODIFIED: Pass hasBufferLayer flag
+    const layoutResult = calculateElevationLayout(inputs, true, hasBufferLayer); // True for even distribution
 
     // ... (Error checking - no changes) ...
     if (!layoutResult || layoutResult.N === 0) {
@@ -1367,7 +1473,7 @@ export function drawElevationView(sysLength, sysWidth, sysHeight, config) {
 
             // MODIFIED: Add index to forEach
             levels.forEach((level, index) => {
-                const levelIndex = index + 1; // Level number (1-based)
+                // MODIFIED: Removed levelIndex
                 
                 const beamY = y_coord(level.beamTop);
                 const beamHeightPx = BW * contentScale;
@@ -1397,7 +1503,8 @@ export function drawElevationView(sysLength, sysWidth, sysHeight, config) {
                 // currentToteX is now *after* the last tote + gap.
                 // Go back one gap to find the right edge of the last tote.
                 const lastToteRightEdge = currentToteX - toteToToteDistPx;
-                ctx.fillText(levelIndex, lastToteRightEdge + (5 / state.scale), toteY + (toteHeightPx / 2));
+                // MODIFIED: Use level.levelLabel
+                ctx.fillText(level.levelLabel, lastToteRightEdge + (5 / state.scale), toteY + (toteHeightPx / 2));
                 // --- END: Draw level number ---
 
 
@@ -1474,7 +1581,7 @@ export function drawElevationView(sysLength, sysWidth, sysHeight, config) {
 
             // MODIFIED: Add index to forEach
             levels.forEach((level, index) => {
-                const levelIndex = index + 1; // Level number (1-based)
+                // MODIFIED: Removed levelIndex
 
                 const toteY = y_coord(level.toteTop);
                 const toteHeightPx = TH * contentScale;
@@ -1498,7 +1605,8 @@ export function drawElevationView(sysLength, sysWidth, sysHeight, config) {
                 ctx.textAlign = 'left';
                 ctx.textBaseline = 'middle';
                 // currentToteX is now at the right edge of the last tote.
-                ctx.fillText(levelIndex, currentToteX + (5 / state.scale), toteY + (toteHeightPx / 2));
+                // MODIFIED: Use level.levelLabel
+                ctx.fillText(level.levelLabel, currentToteX + (5 / state.scale), toteY + (toteHeightPx / 2));
                 // --- END: Draw level number ---
 
                 if (level.sprinklerAdded > 0) {

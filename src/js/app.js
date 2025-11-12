@@ -1,5 +1,5 @@
 import { initializeUI } from './ui.js';
-import { initializeSolver, runAllConfigurationsSolver } from './solver.js'; // MODIFIED
+import { initializeSolver } from './solver.js'; // MODIFIED
 import { configurations } from './config.js'; // Import configurations
 import {
     // --- MAIN SOLVER TAB INPUTS ---
@@ -13,10 +13,10 @@ import {
     solverStorageReqInput, solverThroughputReqInput, solverAspectRatioInput,
 
     // --- NEW READ-ONLY CONTAINER ---
-    readOnlyConfigContainer,
+    readOnlyConfigContainer
 
-    // --- NEW COMPARISON BUTTON ---
-    runAllOptionsButton // MODIFIED
+    // --- NEW COMPARISON BUTTON (REMOVED) ---
+    // MODIFIED: Removed the problematic import line that was here
 
 } from './dom.js';
 
@@ -136,6 +136,7 @@ function buildReadOnlyConfigPage() {
                             ${createParamHTML("Max Perf. Density", config['max-perf-density'])}
                             ${createParamHTML("Consider Tunnels", config['considerTunnels'])}
                             ${createParamHTML("Consider Backpacks", config['considerBackpacks'])}
+                            ${createParamHTML("Buffer Layer", config['hasBufferLayer'])}
                         </div>
                     </div>
 
@@ -184,10 +185,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeUI(redrawInputs, numberInputs, decimalInputs); // MODIFIED
     initializeSolver();
 
-    // --- NEW: Add listener for Comparison tab button ---
-    if (runAllOptionsButton) {
-        runAllOptionsButton.addEventListener('click', () => {
-            runAllConfigurationsSolver();
-        });
-    }
+    // --- MODIFIED: Removed listener for Comparison tab button ---
 });

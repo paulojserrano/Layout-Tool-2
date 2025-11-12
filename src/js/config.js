@@ -41,6 +41,7 @@ export const configTemplate = {
     "setback-right": 1500, // NEW
     "considerTunnels": true, // NEW
     "considerBackpacks": true, // NEW
+    "hasBufferLayer": false, // NEW
     "tote-width": 400,
     "tote-length": 600,
     "tote-height": 320,
@@ -101,6 +102,7 @@ export const configurations = {
         "setback-right": 1500, // NEW
         "considerTunnels": true, // NEW
         "considerBackpacks": true, // NEW
+        "hasBufferLayer": true, // NEW
         "tote-width": 650,
         "tote-length": 450,
         "tote-height": 300,
@@ -114,7 +116,7 @@ export const configurations = {
         "hook-allowance": 90,
         "aisle-width": 1160,
         "rack-flue-space": 150,
-        "base-beam-height": 430,
+        "base-beam-height": 370,
         "beam-width": 60,
         "min-clearance": 40,
         "overhead-clearance": 915,
@@ -156,6 +158,7 @@ export const configurations = {
         "setback-right": 1500, // NEW
         "considerTunnels": true, // NEW
         "considerBackpacks": true, // NEW
+        "hasBufferLayer": true, // NEW
         "tote-width": 650,
         "tote-length": 450,
         "tote-height": 300,
@@ -169,7 +172,7 @@ export const configurations = {
         "hook-allowance": 90,
         "aisle-width": 1160,
         "rack-flue-space": 150,
-        "base-beam-height": 430,
+        "base-beam-height": 370,
         "beam-width": 60,
         "min-clearance": 40,
         "overhead-clearance": 915,
@@ -211,6 +214,7 @@ export const configurations = {
         "setback-right": 1500, // NEW
         "considerTunnels": true, // NEW
         "considerBackpacks": true, // NEW
+        "hasBufferLayer": true, // NEW
         "tote-width": 850,
         "tote-length": 650,
         "tote-height": 400,
@@ -224,68 +228,13 @@ export const configurations = {
         "hook-allowance": 90,
         "aisle-width": 1380, // Example change
         "rack-flue-space": 150,
-        "base-beam-height": 430,
+        "base-beam-height": 370,
         "beam-width": 60,
         "min-clearance": 40,
         "overhead-clearance": 915,
         "sprinkler-threshold": 4572,
         "sprinkler-clearance": 500,
         "max-perf-density": 1, // REQ 4: Added
-    },
-    "HPC": {
-        "name": "HPC - Single Deep",
-        // NEW: Grouped LISP export properties
-        "lispExportProps": {
-            "standard": {
-                "blockName": "HPS3-E2-850-DD-STD",
-                "color": 256,
-                "rotation": 0,
-                "xOffset": 0,
-                "yOffset": 0
-            },
-            "backpack": {
-                "blockName": "HPS3-E2-850-DD-BP",
-                "color": 5,
-                "rotation": 0,
-                "xOffset": 0,
-                "yOffset": 0
-            },
-            "tunnel": {
-                "blockName": "HPS3-E2-850-DD-TUN",
-                "color": 2,
-                "rotation": 90,
-                "xOffset": 0,
-                "yOffset": 0
-            }
-        },
-        "dynamicPropName": "BayType", // NEW: For LISP export
-        "layout-mode": "all-singles",
-        "top-setback": 1500,
-        "bottom-setback": 3950,
-        "setback-left": 200, // NEW
-        "setback-right": 200, // NEW
-        "considerTunnels": false, // NEW
-        "considerBackpacks": false, // NEW
-        "tote-width": 650,
-        "tote-length": 450,
-        "tote-height": 300,
-        "tote-qty-per-bay": 3, // Example change
-        "totes-deep": 2,
-        "tote-to-tote-dist": 140, // Example change
-        "tote-to-upright-dist": 25, // Example change
-        "tote-back-to-back-dist": 30,
-        "upright-length": 90, // Example change
-        "upright-width": 70, // Example change
-        "hook-allowance": 0,
-        "aisle-width": 900, // Example change
-        "rack-flue-space": 150,
-        "base-beam-height": 900,
-        "beam-width": 60,
-        "min-clearance": 40,
-        "overhead-clearance": 915,
-        "sprinkler-threshold": 4572,
-        "sprinkler-clearance": 200,
-        "max-perf-density": 2.5, // REQ 4: Added
     },
     "hps3-e2-850-td": {
         "name": "HPS3-E2 - 850x650x400 - Triple Deep",
@@ -321,6 +270,7 @@ export const configurations = {
         "setback-right": 1500, // NEW
         "considerTunnels": true, // NEW
         "considerBackpacks": true, // NEW
+        "hasBufferLayer": true, // NEW
         "tote-width": 850,
         "tote-length": 650,
         "tote-height": 400,
@@ -334,13 +284,69 @@ export const configurations = {
         "hook-allowance": 90,
         "aisle-width": 1380,
         "rack-flue-space": 150,
-        "base-beam-height": 430,
+        "base-beam-height": 370,
         "beam-width": 60,
         "min-clearance": 40,
         "overhead-clearance": 915,
-        "sprinkler-threshold": 4000,
-        "sprinkler-clearance": 500,
+        "sprinkler-threshold": 4572,
+        "sprinkler-clearance": 200,
         "max-perf-density": 0.4, // REQ 4: Added
+    },
+    "HPC": {
+        "name": "HPC - Single Deep",
+        // NEW: Grouped LISP export properties
+        "lispExportProps": {
+            "standard": {
+                "blockName": "HPS3-E2-850-DD-STD",
+                "color": 256,
+                "rotation": 0,
+                "xOffset": 0,
+                "yOffset": 0
+            },
+            "backpack": {
+                "blockName": "HPS3-E2-850-DD-BP",
+                "color": 5,
+                "rotation": 0,
+                "xOffset": 0,
+                "yOffset": 0
+            },
+            "tunnel": {
+                "blockName": "HPS3-E2-850-DD-TUN",
+                "color": 2,
+                "rotation": 90,
+                "xOffset": 0,
+                "yOffset": 0
+            }
+        },
+        "dynamicPropName": "BayType", // NEW: For LISP export
+        "layout-mode": "all-singles",
+        "top-setback": 1500,
+        "bottom-setback": 3950,
+        "setback-left": 200, // NEW
+        "setback-right": 200, // NEW
+        "considerTunnels": false, // NEW
+        "considerBackpacks": false, // NEW
+        "hasBufferLayer": false, // NEW
+        "tote-width": 650,
+        "tote-length": 450,
+        "tote-height": 300,
+        "tote-qty-per-bay": 3, // Example change
+        "totes-deep": 2,
+        "tote-to-tote-dist": 140, // Example change
+        "tote-to-upright-dist": 25, // Example change
+        "tote-back-to-back-dist": 30,
+        "upright-length": 90, // Example change
+        "upright-width": 70, // Example change
+        "hook-allowance": 0,
+        "aisle-width": 900, // Example change
+        "rack-flue-space": 150,
+        "base-beam-height": 840,
+        "beam-width": 60,
+        "min-clearance": 40,
+        "overhead-clearance": 915,
+        "sprinkler-threshold": 4572,
+        "sprinkler-clearance": 200,
+        "max-perf-density": 2.5, // REQ 4: Added
     }
     // Add more configurations here following the same pattern
 };

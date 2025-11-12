@@ -10,6 +10,7 @@ import { drawWarehouse, drawRackDetail, drawElevationView } from './drawing.js';
 import { parseNumber, formatNumber, formatDecimalNumber } from './utils.js'; // MODIFIED
 import { configurations } from './config.js';
 import { getViewState } from './viewState.js';
+import { runAllConfigurationsSolver, solverFinalResults } from './solver.js'; // MODIFIED: Import solver function AND solverFinalResults
 
 let rafId = null; // Single RAF ID for debouncing all draw calls
 
@@ -35,9 +36,10 @@ export function requestRedraw() {
         const sysHeight = parseNumber(clearHeightInput.value);
 
         // --- Pass config to all draw functions ---
-        drawWarehouse(sysLength, sysWidth, sysHeight, config);
-        drawRackDetail(sysLength, sysWidth, sysHeight, config);
-        drawElevationView(sysLength, sysWidth, sysHeight, config);
+        // MODIFIED: Pass solverFinalResults as the last argument
+        drawWarehouse(sysLength, sysWidth, sysHeight, config, solverFinalResults);
+        drawRackDetail(sysLength, sysWidth, sysHeight, config, solverFinalResults);
+        drawElevationView(sysLength, sysWidth, sysHeight, config, solverFinalResults);
 
         rafId = null;
     });
@@ -156,6 +158,11 @@ export function initializeUI(redrawInputs, numberInputs, decimalInputs = []) { /
             e.target.classList.add('active');
             const tabId = e.target.getAttribute('data-tab');
             document.getElementById(tabId).classList.add('active');
+
+            // NEW: Run comparison solver if that tab was clicked
+            if (tabId === 'comparisonTabContent') {
+                runAllConfigurationsSolver();
+            }
 
             // Request a redraw to ensure the newly visible canvas is drawn
             requestRedraw();

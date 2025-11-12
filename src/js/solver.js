@@ -6,16 +6,17 @@ import {
     solverStatus, solverResultLength, solverResultWidth,
     solverResultFootprint, solverResultLocations, solverResultPerfDensity,
     exportResultsButton, // MODIFIED: Removed applySolverButton
-    solverModal, solverModalMessage,
-    solverModalContinue, solverModalStop, solverModalBackdrop,
+    // MODIFIED: Removed modal elements
     systemLengthInput, systemWidthInput, mainViewTabs,
     solverConfigSelect,
     clearHeightInput,
+    solverExpandPDCheckbox, // NEW
+    solverReduceLevelsCheckbox, // NEW
 
     // --- NEW: Comparison Tab ---
     comparisonTabButton,
     comparisonResultsContainer,
-    runAllOptionsButton,
+    // MODIFIED: Removed runAllOptionsButton
     runAllStatus,
 
     // --- NEW: Result Metrics ---
@@ -32,16 +33,11 @@ import { requestRedraw } from './ui.js';
 import { configurations } from './config.js'; // MODIFIED: Import all configs
 
 let solverTempResults = null;
-let solverFinalResults = null;
+export let solverFinalResults = null; // MODIFIED: Export this
 
-// --- Solver Modal Controls ---
-function showSolverModal(message) {
-    solverModalMessage.textContent = message;
-    solverModal.style.display = 'flex';
-}
-function hideSolverModal() {
-    solverModal.style.display = 'none';
-}
+// --- MODIFIED: Solver Modal Controls REMOVED ---
+// function showSolverModal(message) { ... }
+// function hideSolverModal() { ... }
 
 
 // --- Update Results Panel (Main Tab) ---
@@ -83,7 +79,8 @@ function updateSolverResults(results) {
 }
 
 // --- Solver Main Function (Interactive) ---
-async function runSolver(continueForPerformance = false) {
+// MODIFIED: continueForPerformance is now set internally
+async function runSolver() {
     runSolverButton.disabled = true;
     exportResultsButton.style.display = 'none'; // MODIFIED: Hide export button
     
@@ -92,6 +89,8 @@ async function runSolver(continueForPerformance = false) {
     const throughputReq = parseNumber(solverThroughputReqInput.value);
     const aspectRatio = parseNumber(solverAspectRatioInput.value) || 1.0;
     const sysHeight = parseNumber(clearHeightInput.value);
+    const expandForPerformance = solverExpandPDCheckbox.checked; // NEW
+    const reduceLevels = solverReduceLevelsCheckbox.checked; // NEW
     
     // Get Selected Configuration
     const selectedConfigName = solverConfigSelect.value;
@@ -103,26 +102,19 @@ async function runSolver(continueForPerformance = false) {
         return;
     }
     
-    // --- MODIFIED: Get maxDensity from metrics result ---
-    // const maxDensity = selectedConfig['max-perf-density'] || 50;
-    // We'll get this from the metrics object now
-
     if (storageReq === 0 || throughputReq === 0 || aspectRatio === 0 || sysHeight === 0) {
         solverStatus.textContent = "Error: Please check solver inputs.";
         runSolverButton.disabled = false;
         return;
     }
 
-    let currentL = continueForPerformance ? solverTempResults.L : 10000; // Start at 10m
+    let currentL = 10000; // Start at 10m
     const step = 1000; // 1m steps
     let safetyBreak = 1000; // 1000m
-    let storageMetResults = continueForPerformance ? solverTempResults : null;
+    let storageMetResults = null;
+    let continueForPerformance = false; // Internal state
 
-    if (continueForPerformance) {
-        solverStatus.textContent = "Solving for performance...";
-    } else {
-        solverStatus.textContent = "Solving for storage...";
-    }
+    solverStatus.textContent = "Solving for storage...";
 
     function solverLoop() {
         let metrics;
@@ -136,15 +128,25 @@ async function runSolver(continueForPerformance = false) {
                 // Found storage target
                 const density = (metrics.footprint > 0) ? throughputReq / metrics.footprint : 0;
                 storageMetResults = { ...metrics, density: density };
-                solverTempResults = storageMetResults; // Save for modal
+                // solverTempResults = storageMetResults; // No longer need temp results for modal
 
                 if (storageMetResults.density > metrics.maxPerfDensity) {
                     // Storage met, but density is too high
-                    const msg = `Storage target met at ${formatNumber(metrics.totalLocations)} locations. However, performance density is ${storageMetResults.density.toFixed(1)} (target: ${metrics.maxPerfDensity}). Continue expanding to meet performance target?`;
-                    showSolverModal(msg);
-                    // Stop the loop, modal buttons will take over
-                    runSolverButton.disabled = false; // Re-enable button
-                    return;
+                    
+                    // MODIFIED: Check checkbox instead of showing modal
+                    if (expandForPerformance) {
+                        // User wants to continue
+                        continueForPerformance = true;
+                        solverStatus.textContent = "Solving for performance...";
+                        // Continue to next animation frame
+                    } else {
+                        // User does not want to continue, stop here
+                        updateSolverResults(storageMetResults);
+                        solverStatus.textContent = "Complete (Storage target met).";
+                        runSolverButton.disabled = false;
+                        return;
+                    }
+
                 } else {
                     // Storage and performance met in one go!
                     updateSolverResults(storageMetResults);
@@ -162,7 +164,41 @@ async function runSolver(continueForPerformance = false) {
 
             if (density <= metrics.maxPerfDensity) {
                 // Performance target met
-                updateSolverResults({ ...metrics, density: density });
+                
+                // --- NEW: Reduction Logic ---
+                let finalMetrics = { ...metrics, density: density };
+
+                if (reduceLevels && finalMetrics.totalLocations > storageReq) {
+                    // We met performance, and now we check if we can reduce levels
+                    // We need the L/W from this step
+                    const perfL = finalMetrics.L;
+                    const perfW = finalMetrics.W;
+                    const perfDensity = finalMetrics.density;
+
+                    let bestMetrics = finalMetrics; // Start with the max-level solution
+                    
+                    // Iterate downwards from (maxLevels - 1)
+                    for (let levels = finalMetrics.calculatedMaxLevels - 1; levels > 0; levels--) {
+                        // Recalculate metrics with this specific level count
+                        const reducedMetrics = getMetrics(perfL, perfW, sysHeight, selectedConfig, levels);
+                        
+                        if (reducedMetrics.totalLocations >= storageReq) {
+                            // This level count is still above the storage requirement
+                            // Is it better than the last one? Yes, it's closer.
+                            bestMetrics = { ...reducedMetrics, density: perfDensity }; // Keep the same L/W, so density is the same
+                        } else {
+                            // We went one level too low. The previous one (`bestMetrics`) is the answer.
+                            break; 
+                        }
+                    }
+                    // After the loop, bestMetrics holds the optimal solution
+                    updateSolverResults(bestMetrics);
+
+                } else {
+                    // Just update with the original performance-met solution
+                    updateSolverResults(finalMetrics);
+                }
+                
                 solverStatus.textContent = "Complete.";
                 runSolverButton.disabled = false;
                 return;
@@ -184,8 +220,8 @@ async function runSolver(continueForPerformance = false) {
 }
 
 
-// --- MODIFIED: Export Results to LISP-formatted TXT ---
-function exportResultsToJSON() {
+// --- MODIFIED: Renamed function ---
+function exportLayout() {
     if (!solverFinalResults) {
         console.error("No solver results to export.");
         return;
@@ -421,7 +457,8 @@ function exportResultsToJSON() {
  * Does not use requestAnimationFrame or interact with the DOM.
  * Automatically continues to solve for performance if storage target is met but density is too high.
  */
-function findSolutionForConfig(storageReq, throughputReq, aspectRatio, sysHeight, config, configKey) {
+// MODIFIED: Added expandForPerformance and reduceLevels arguments
+function findSolutionForConfig(storageReq, throughputReq, aspectRatio, sysHeight, config, configKey, expandForPerformance, reduceLevels) {
     return new Promise((resolve) => {
         // --- MODIFIED: maxDensity comes from metrics ---
         // const maxDensity = config['max-perf-density'] || 50;
@@ -449,14 +486,18 @@ function findSolutionForConfig(storageReq, throughputReq, aspectRatio, sysHeight
             return;
         }
 
-        if (storageMetResults.density <= storageMetResults.maxPerfDensity) {
+        // MODIFIED: Check density and expandForPerformance flag
+        if (storageMetResults.density <= storageMetResults.maxPerfDensity || !expandForPerformance) {
             // Storage and performance met in one go!
+            // OR we were told not to expand.
+            // In either case, we don't expand, so we don't reduce.
             resolve({ ...storageMetResults, configKey, configName: config.name });
             return;
         }
 
         // --- Loop 2: Find Performance (if needed) ---
         // Start from the length where storage was met
+        let performanceMetMetrics = null; // NEW
         while (currentL <= (safetyBreak * 1000)) {
             currentL += step;
             let currentW = currentL / aspectRatio;
@@ -465,13 +506,40 @@ function findSolutionForConfig(storageReq, throughputReq, aspectRatio, sysHeight
 
             if (density <= metrics.maxPerfDensity) {
                 // Performance target met
-                resolve({ ...metrics, density: density, configKey, configName: config.name });
-                return;
+                performanceMetMetrics = { ...metrics, density: density }; // NEW
+                break; // NEW
             }
         }
 
-        // If loop 2 finishes without meeting performance
-        resolve(null);
+        // NEW: Check if Loop 2 found a solution
+        if (!performanceMetMetrics) {
+            resolve(null); // Expanded but never met performance
+            return;
+        }
+
+        // --- NEW: Reduction Logic ---
+        if (reduceLevels && performanceMetMetrics.totalLocations > storageReq) {
+            let bestMetrics = performanceMetMetrics;
+            // We need the L/W from the performance-met solution
+            const perfL = performanceMetMetrics.L;
+            const perfW = performanceMetMetrics.W;
+            const perfDensity = performanceMetMetrics.density;
+
+            for (let levels = performanceMetMetrics.calculatedMaxLevels - 1; levels > 0; levels--) {
+                const reducedMetrics = getMetrics(perfL, perfW, sysHeight, config, levels);
+                
+                if (reducedMetrics.totalLocations >= storageReq) {
+                    bestMetrics = { ...reducedMetrics, density: perfDensity };
+                } else {
+                    break; // Went too low
+                }
+            }
+            resolve({ ...bestMetrics, configKey, configName: config.name });
+
+        } else {
+            // Don't reduce, just return the performance-met solution
+            resolve({ ...performanceMetMetrics, configKey, configName: config.name });
+        }
     });
 }
 
@@ -532,8 +600,10 @@ function createResultCard(result) {
 }
 
 // --- NEW: Main Function for Comparison Tab ---
+// MODIFIED: Export this function so ui.js can call it
 export async function runAllConfigurationsSolver() {
-    runAllOptionsButton.disabled = true;
+    // MODIFIED: Removed button disable
+    // runAllOptionsButton.disabled = true;
     runAllStatus.textContent = "Running all configurations...";
     comparisonResultsContainer.innerHTML = ''; // Clear previous results
 
@@ -542,10 +612,13 @@ export async function runAllConfigurationsSolver() {
     const throughputReq = parseNumber(solverThroughputReqInput.value);
     const aspectRatio = parseNumber(solverAspectRatioInput.value) || 1.0;
     const sysHeight = parseNumber(clearHeightInput.value);
+    // NEW: Read checkbox states
+    const expandForPerformance = solverExpandPDCheckbox.checked;
+    const reduceLevels = solverReduceLevelsCheckbox.checked;
 
     if (storageReq === 0 || throughputReq === 0 || aspectRatio === 0 || sysHeight === 0) {
         runAllStatus.textContent = "Error: Please check solver inputs on main tab.";
-        runAllOptionsButton.disabled = false;
+        // runAllOptionsButton.disabled = false;
         return;
     }
 
@@ -558,7 +631,9 @@ export async function runAllConfigurationsSolver() {
             aspectRatio,
             sysHeight,
             config,
-            configKey
+            configKey,
+            expandForPerformance, // Pass flag
+            reduceLevels          // Pass flag
         ));
     }
 
@@ -577,39 +652,27 @@ export async function runAllConfigurationsSolver() {
         }
 
         runAllStatus.textContent = `Complete. Found ${validResults.length} valid solutions.`;
-        runAllOptionsButton.disabled = false;
+        // runAllOptionsButton.disabled = false;
 
     } catch (error) {
         console.error("Error during comparison solve:", error);
         runAllStatus.textContent = "An error occurred. Check console for details.";
-        runAllOptionsButton.disabled = false;
+        // runAllOptionsButton.disabled = false;
     }
 }
 
 
 // --- Main Initialization ---
 export function initializeSolver() {
-    runSolverButton.addEventListener('click', () => runSolver(false));
+    runSolverButton.addEventListener('click', () => runSolver());
 
     // NEW: Add listener for export button
-    exportResultsButton.addEventListener('click', exportResultsToJSON);
+    // MODIFIED: Call renamed function
+    exportResultsButton.addEventListener('click', exportLayout);
 
     solverConfigSelect.addEventListener('change', () => {
         requestRedraw(); // Redraw visualization with new config
     });
 
-    // Modal listeners
-    solverModalStop.addEventListener('click', () => {
-        hideSolverModal();
-        updateSolverResults(solverTempResults); // Use the stored storage-met results
-        solverStatus.textContent = "Complete (Storage target met).";
-        runSolverButton.disabled = false;
-    });
-
-    solverModalContinue.addEventListener('click', () => {
-        hideSolverModal();
-        runSolver(true); // Start part 2
-    });
-
-    solverModalBackdrop.addEventListener('click', hideSolverModal);
+    // MODIFIED: Modal listeners REMOVED
 }

@@ -169,8 +169,8 @@ export function calculateLayout(configBayDepth, singleBayDepth, aisleWidth, sysL
  * Calculates the layout of rack levels.
  * Returns an array of level objects, or null if it fails.
  */
-// (No changes to this function)
-export function calculateElevationLayout(inputs, evenDistribution = false) {
+// MODIFIED: Added hasBufferLayer parameter
+export function calculateElevationLayout(inputs, evenDistribution = false, hasBufferLayer = false) {
     const { WH, BaseHeight, BW, TH, MC, OC, SC, ST } = inputs;
 
     if (WH <= 0 || BaseHeight < 0 || BW <= 0 || TH <= 0 || MC < 0 || OC < 0 || SC < 0 || ST <= 0) {
@@ -201,12 +201,17 @@ export function calculateElevationLayout(inputs, evenDistribution = false) {
             break;
         }
 
-        maxN++;
+        const currentLevelIndex = maxN; // 0, 1, 2...
+        // NEW: Determine level label
+        const levelLabel = hasBufferLayer ? (currentLevelIndex === 0 ? 'B' : `${currentLevelIndex}`) : `${currentLevelIndex + 1}`;
+        maxN++; // Increment total level count
+
         const levelInfo = {
             beamBottom: currentBeamBottom,
             beamTop: currentBeamBottom + BW,
             toteTop: currentBeamBottom + BW + TH,
-            sprinklerAdded: 0
+            sprinklerAdded: 0,
+            levelLabel: levelLabel // NEW
         };
         capacityLayout.push(levelInfo);
         topToteHeightCapacity = levelInfo.toteTop;
@@ -244,11 +249,16 @@ export function calculateElevationLayout(inputs, evenDistribution = false) {
     currentToteTop = BaseHeight + BW + TH;
 
     for (let i = 1; i <= maxN; i++) {
+        const currentLevelIndex = i - 1; // 0, 1, 2...
+        // NEW: Determine level label
+        const levelLabel = hasBufferLayer ? (currentLevelIndex === 0 ? 'B' : `${currentLevelIndex}`) : `${currentLevelIndex + 1}`;
+        
         const levelInfo = {
             beamBottom: currentBeamBottom,
             beamTop: currentBeamBottom + BW,
             toteTop: currentBeamBottom + BW + TH,
-            sprinklerAdded: 0
+            sprinklerAdded: 0,
+            levelLabel: levelLabel // NEW
         };
         evenLayout.push(levelInfo);
         levelCount++;
@@ -292,7 +302,8 @@ export function calculateElevationLayout(inputs, evenDistribution = false) {
 // --- MODIFIED FUNCTION ---
 // This function is the core of the solver logic.
 // It should ONLY use the passed-in parameters, not read from the DOM.
-export function getMetrics(sysLength, sysWidth, sysHeight, config) {
+// MODIFIED: Added levelOverride parameter
+export function getMetrics(sysLength, sysWidth, sysHeight, config, levelOverride = null) {
     if (!config) {
         // This should not happen if solver.js is correct
         console.error("getMetrics was called with no config.");
@@ -323,6 +334,8 @@ export function getMetrics(sysLength, sysWidth, sysHeight, config) {
     const layoutMode = config['layout-mode'] || 's-d-s';
     // NEW: Read tunnel flag
     const considerTunnels = config['considerTunnels'] || false;
+    // NEW: Read buffer layer flag
+    const hasBufferLayer = config['hasBufferLayer'] || false;
 
 
     // --- 3. Calculate Bay Dimensions ---
@@ -365,8 +378,12 @@ export function getMetrics(sysLength, sysWidth, sysHeight, config) {
     };
 
     // --- 6. Calculate Elevation (Max Levels) ---
-    const layoutResult = calculateElevationLayout(coreElevationInputs, false); // false = don't need even distribution
-    const maxLevels = layoutResult ? layoutResult.N : 0;
+    // MODIFIED: Pass hasBufferLayer flag
+    const layoutResult = calculateElevationLayout(coreElevationInputs, false, hasBufferLayer); // false = don't need even distribution
+    // MODIFIED: Use levelOverride if provided and valid
+    const calculatedMaxLevels = layoutResult ? layoutResult.N : 0;
+    const maxLevels = (levelOverride !== null && levelOverride > 0 && levelOverride <= calculatedMaxLevels) ? levelOverride : calculatedMaxLevels;
+    const allLevels = layoutResult ? layoutResult.levels : []; // NEW: Get all level data
 
     // --- 7. Calculate Total Locations ---
     // MODIFIED: This is now more complex.
@@ -374,8 +391,20 @@ export function getMetrics(sysLength, sysWidth, sysHeight, config) {
     // We need to calculate tunnel bays separately.
     const numTunnelBaysPerRow = considerTunnels ? Math.floor(layout.baysPerRack / 9) : 0;
     const totalTunnelBays = numTunnelBaysPerRow * numRows;
-    const locationsPerStandardBay = maxLevels * toteQtyPerBay * totesDeep;
-    const locationsPerTunnelBay = 5 * toteQtyPerBay * totesDeep; // As per demo file
+    
+    // NEW: Adjust maxLevels for buffer layer when calculating locations
+    let storageLevels = maxLevels;
+    if (hasBufferLayer && maxLevels > 0) {
+        storageLevels = maxLevels - 1; // Buffer layer doesn't count for storage
+    }
+    if (storageLevels < 0) storageLevels = 0;
+
+    const locationsPerStandardBay = storageLevels * toteQtyPerBay * totesDeep;
+    
+    // --- NEW: Calculate Tunnel Levels based on 6.5m threshold ---
+    const tunnelThreshold = 6500; // 6.5 meters
+    const numTunnelLevels = allLevels.filter(level => level.beamBottom >= tunnelThreshold).length;
+    const locationsPerTunnelBay = numTunnelLevels * toteQtyPerBay * totesDeep; // MODIFIED
 
     const totalLocations = (layout.totalBays * locationsPerStandardBay) + (totalTunnelBays * locationsPerTunnelBay);
 
@@ -401,8 +430,10 @@ export function getMetrics(sysLength, sysWidth, sysHeight, config) {
         totalBays: layout.totalBays + totalTunnelBays,
         baysPerRack: layout.baysPerRack,
         numRows: numRows,
-        maxLevels: maxLevels,
+        maxLevels: maxLevels, // This is the *used* levels
+        calculatedMaxLevels: calculatedMaxLevels, // This is the *physical* max
         toteVolume_m3: toteVolume_m3,
-        maxPerfDensity: maxPerfDensity
+        maxPerfDensity: maxPerfDensity,
+        numTunnelLevels: numTunnelLevels // NEW: Return this for the metrics table
     };
 }

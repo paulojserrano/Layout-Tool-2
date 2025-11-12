@@ -44,39 +44,16 @@
                 
                 <!-- Box 1: Inputs -->
                 <section class="bg-white p-6 rounded-lg shadow-lg">
+                    <!-- MODIFIED: Title changed -->
                     <h2 class="text-lg font-semibold text-slate-900 border-b border-slate-300 pb-3 mb-5">
-                        1. Requirements
+                        Solver Parameters
                     </h2>
+                    <!-- MODIFIED: Layout restructured -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
                         
-                        <!-- Col 1: Warehouse Constraints (GLOBAL) -->
+                        <!-- Col 1: Requirements & Constraints -->
                         <div class="space-y-5">
-                            <h3 class="text-base font-semibold text-slate-900 -mb-1">Warehouse</h3>
-                            <div>
-                                <label for="systemLength" class="block text-sm font-medium text-slate-700 mb-1">Length (mm)</label>
-                                <input type="text" id="systemLength" value="30,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            </div>
-                            <div>
-                                <label for="systemWidth" class="block text-sm font-medium text-slate-700 mb-1">Width (mm)</label>
-                                <input type="text" id="systemWidth" value="25,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            </div>
-                            <div>
-                                <label for="clearHeight" class="block text-sm font-medium text-slate-700 mb-1">Clear Height (mm)</label>
-                                <input type="text" id="clearHeight" value="10,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <p class="helper-text">For elevation view</p>
-                            </div>
-                        </div>
-
-                        <!-- Col 2: Solver Inputs (EXISTING) -->
-                        <div class="space-y-5">
-                            <h3 class="text-base font-semibold text-slate-900 -mb-1">Solver</h3>
-                            <div>
-                                <label for="solverConfigSelect" class="block text-sm font-medium text-slate-700 mb-1">Configuration</label>
-                                <select id="solverConfigSelect" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <!-- Options populated by app.js -->
-                                </select>
-                                <p class="helper-text">Uses parameters from Configuration tab.</p>
-                            </div>
+                            <h3 class="text-base font-semibold text-slate-900 -mb-1">Requirements</h3>
                             <div>
                                 <label for="solverStorageReq" class="block text-sm font-medium text-slate-700 mb-1">Storage Requirement (Locations)</label>
                                 <input type="text" id="solverStorageReq" value="30,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
@@ -85,10 +62,54 @@
                                 <label for="solverThroughputReq" class="block text-sm font-medium text-slate-700 mb-1">Throughput Requirement (Total PPH)</label>
                                 <input type="text" id="solverThroughputReq" value="2,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
+
+                            <h3 class="text-base font-semibold text-slate-900 -mb-1 pt-4">Constraints</h3>
+                            <div>
+                                <label for="systemLength" class="block text-sm font-medium text-slate-700 mb-1">Max Length (mm)</label>
+                                <input type="text" id="systemLength" value="30,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="systemWidth" class="block text-sm font-medium text-slate-700 mb-1">Max Width (mm)</label>
+                                <input type="text" id="systemWidth" value="25,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="clearHeight" class="block text-sm font-medium text-slate-700 mb-1">Clear Height (mm)</label>
+                                <input type="text" id="clearHeight" value="10,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
                             <div>
                                 <label for="solverAspectRatio" class="block text-sm font-medium text-slate-700 mb-1">Aspect Ratio (L / W)</label>
                                 <input type="text" id="solverAspectRatio" value="1.0" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 <p class="helper-text">e.g., 1.5 for (L = 1.5 * W)</p>
+                            </div>
+                        </div>
+
+                        <!-- Col 2: Solver Settings -->
+                        <div class="space-y-5">
+                            <h3 class="text-base font-semibold text-slate-900 -mb-1">Solver Settings</h3>
+                            <div>
+                                <label for="solverConfigSelect" class="block text-sm font-medium text-slate-700 mb-1">Configuration</label>
+                                <select id="solverConfigSelect" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <!-- Options populated by app.js -->
+                                </select>
+                                <p class="helper-text">Uses parameters from Configuration tab.</p>
+                            </div>
+                            
+                            <!-- NEW: Checkbox -->
+                            <div class="pt-2">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="solverExpandPDCheckbox" checked class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                                    <label for="solverExpandPDCheckbox" class="ml-2 block text-sm font-medium text-slate-700">Expand system if PD > Limit</label>
+                                </div>
+                                <p class="helper-text ml-6">If unchecked, solver stops at storage req.</p>
+                            </div>
+                            
+                            <!-- NEW: Reduce Levels Checkbox -->
+                            <div class="pt-2">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="solverReduceLevelsCheckbox" checked class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                                    <label for="solverReduceLevelsCheckbox" class="ml-2 block text-sm font-medium text-slate-700">Reduce levels if expanded</label>
+                                </div>
+                                <p class="helper-text ml-6">Finds closest storage match after expansion.</p>
                             </div>
                         </div>
                         
@@ -154,15 +175,7 @@
                             <span id="solverResultRowsAndBays" class="text-2xl font-bold text-blue-600">0 x 0</span>
                         </div>
                     </div>
-                    <!-- MODIFIED: Removed button grid, export button is now full width -->
-                    <div class="mt-6">
-                         <!-- REMOVED Apply Solver Button -->
-                         <!-- NEW: Export JSON Button -->
-                         <button id="exportResultsButton" class="w-full bg-slate-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-opacity-75" style="display: none;">
-                            Export JSON
-                        </button>
-                    </div>
-
+                    
                     <!-- MOVED: Layout Metrics Table -->
                     <h2 class="text-lg font-semibold text-slate-900 border-b border-slate-300 pb-3 mb-4 mt-8">
                         Layout Metrics
@@ -222,6 +235,13 @@
                             </tbody>
                         </table>
                         <!-- END: Layout Metrics Table -->
+                    </div>
+
+                    <!-- MODIFIED: Export Button MOVED here -->
+                    <div class="mt-6">
+                         <button id="exportResultsButton" class="w-full bg-slate-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-opacity-75" style="display: none;">
+                            Export Layout
+                        </button>
                     </div>
 
                 </section>
@@ -296,30 +316,19 @@
         </div>
         
         <!-- 4. NEW Main Tab Content: Comparison -->
+        <!-- MODIFIED: Removed runAllOptionsContainer section -->
         <div id="comparisonTabContent" class="main-tab-content space-y-6 overflow-y-auto">
             
-            <!-- Button Container -->
-            <section id="runAllOptionsContainer" class="bg-white p-6 rounded-lg shadow-lg">
-                <h2 class="text-lg font-semibold text-slate-900 border-b border-slate-300 pb-3 mb-5">
-                    Run All Configurations
-                </h2>
-                <p class="text-slate-600 mb-4">
-                    Click the button below to run the solver against all available configurations using the same inputs from the "Solver" tab. This may take a moment.
-                </p>
-                <button id="runAllOptionsButton" class="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 disabled:opacity-50">
-                    Run All Options
-                </button>
-                <p id="runAllStatus" class="text-center text-slate-600 mt-3 h-5"></p>
-            </section>
-
             <!-- Results Grid -->
             <section>
                 <h2 class="text-xl font-semibold text-slate-900 px-1 pt-2">
                     Comparison Results
                 </h2>
+                <!-- MODIFIED: Added runAllStatus here -->
+                <p id="runAllStatus" class="text-slate-600 mt-1 px-1 h-5"></p>
                 <div id="comparisonResultsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
                     <!-- Result cards will be injected here by solver.js -->
-                    <p class="text-slate-500 col-span-full">Run the comparison to see results.</p>
+                    <p class="text-slate-500 col-span-full">Click the "Comparison" tab to run the analysis.</p>
                 </div>
             </section>
             
@@ -327,25 +336,7 @@
 
     </main>
 
-    <!-- Solver Modal -->
-    <div id="solverModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
-        <div class="absolute inset-0" id="solverModalBackdrop"></div>
-        <div class="relative bg-white w-full max-w-lg p-6 rounded-lg shadow-xl">
-            <h3 class="text-xl font-semibold text-slate-900 mb-4">Solver Warning</h3>
-            <p id="solverModalMessage" class="text-slate-600 mb-6">
-                <!-- Message injected by JS -->
-            </p>
-            <div class="flex justify-end gap-4">
-                <button id="solverModalStop" class="px-6 py-2 rounded-lg bg-slate-200 text-slate-800 font-medium hover:bg-slate-300">
-                    No, Use Current Size
-                </button>
-                <button id="solverModalContinue" class="px-6 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700">
-                    Yes, Continue
-                </button>
-            </div>
-        </div>
-    </div>
-
+    <!-- MODIFIED: Solver Modal REMOVED -->
 
     <!-- JavaScript -->
     <script type="module" src="src/js/app.js"></script>

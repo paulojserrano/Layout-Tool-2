@@ -25,6 +25,8 @@ export const solverConfigSelect = document.getElementById('solverConfigSelect');
 export const solverStorageReqInput = document.getElementById('solverStorageReq');
 export const solverThroughputReqInput = document.getElementById('solverThroughputReq');
 export const solverAspectRatioInput = document.getElementById('solverAspectRatio');
+export const solverExpandPDCheckbox = document.getElementById('solverExpandPDCheckbox'); // NEW
+export const solverReduceLevelsCheckbox = document.getElementById('solverReduceLevelsCheckbox'); // NEW
 export const runSolverButton = document.getElementById('runSolverButton');
 export const solverStatus = document.getElementById('solverStatus');
 export const solverResultLength = document.getElementById('solverResultLength');
@@ -34,11 +36,12 @@ export const solverResultLocations = document.getElementById('solverResultLocati
 export const solverResultPerfDensity = document.getElementById('solverResultPerfDensity');
 // REMOVED: applySolverButton
 export const exportResultsButton = document.getElementById('exportResultsButton'); // NEW
-export const solverModal = document.getElementById('solverModal');
-export const solverModalMessage = document.getElementById('solverModalMessage');
-export const solverModalContinue = document.getElementById('solverModalContinue');
-export const solverModalStop = document.getElementById('solverModalStop');
-export const solverModalBackdrop = document.getElementById('solverModalBackdrop');
+// MODIFIED: Removed Modal elements
+// export const solverModal = document.getElementById('solverModal');
+// export const solverModalMessage = document.getElementById('solverModalMessage');
+// export const solverModalContinue = document.getElementById('solverModalContinue');
+// export const solverModalStop = document.getElementById('solverModalStop');
+// export const solverModalBackdrop = document.getElementById('solverModalBackdrop');
 
 // --- NEW: Solver Result Metrics ---
 export const solverResultGrossVolume = document.getElementById('solverResultGrossVolume');
@@ -56,8 +59,9 @@ export const readOnlyConfigContainer = document.getElementById('readOnlyConfigCo
 // --- NEW: Comparison Tab Elements ---
 export const comparisonTabButton = document.getElementById('comparisonTabButton');
 export const comparisonTabContent = document.getElementById('comparisonTabContent');
-export const runAllOptionsContainer = document.getElementById('runAllOptionsContainer');
-export const runAllOptionsButton = document.getElementById('runAllOptionsButton');
+// MODIFIED: Removed runAllOptionsContainer and runAllOptionsButton
+// export const runAllOptionsContainer = document.getElementById('runAllOptionsContainer');
+// export const runAllOptionsButton = document.getElementById('runAllOptionsButton');
 export const runAllStatus = document.getElementById('runAllStatus');
 export const comparisonResultsContainer = document.getElementById('comparisonResultsContainer');
 
