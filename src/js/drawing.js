@@ -405,7 +405,8 @@ function drawVerticalDimension(ctx, x, y1_c, y2_c, label, zoomScale = 1) {
 // --- MODIFIED: Main Drawing Function (Top-Down) ---
 // REQ 3: This function now receives the global inputs and config object
 // MODIFIED: Added solverResults argument
-export function drawWarehouse(sysLength, sysWidth, sysHeight, config, solverResults = null) {
+// MODIFIED: Signature changed to accept warehouse L/W
+export function drawWarehouse(warehouseLength, warehouseWidth, sysHeight, config, solverResults = null) {
     // ... (canvas setup - no changes) ...
     const dpr = window.devicePixelRatio || 1;
 
@@ -469,6 +470,22 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config, solverResu
         return;
     }
     
+    // --- MODIFIED: Determine boundary, layout, and display dimensions ---
+    const boundaryL_world = warehouseLength;
+    const boundaryW_world = warehouseWidth;
+    // Layout dimensions are from solver (if run) or warehouse (if not)
+    const layoutL_world = solverResults ? solverResults.L : warehouseLength;
+    const layoutW_world = solverResults ? solverResults.W : warehouseWidth;
+    // Display dimensions are the max of layout and boundary
+    const displayL_world = Math.max(boundaryL_world, layoutL_world);
+    const displayW_world = Math.max(boundaryW_world, layoutW_world);
+
+    // Check for invalid dimensions
+    if (displayL_world <= 0 || displayW_world <= 0) {
+        showErrorOnCanvas(warehouseCtx, "Invalid dimensions.", canvasWidth, canvasHeight);
+        return;
+    }
+
     const toteWidth = config['tote-width'] || 0;
     const toteLength = config['tote-length'] || 0;
     const toteQtyPerBay = config['tote-qty-per-bay'] || 1;
@@ -546,34 +563,47 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config, solverResu
     const effectiveConsiderTunnels = configConsiderTunnels && numTunnelLevels > 0;
 
     // --- Run Layout Calculation ---
-    // MODIFIED: Pass configConsiderTunnels to ensure layout spacing is correct
-    const layout = calculateLayout(configBayDepth, singleBayDepth, aisleWidth, sysLength, sysWidth, layoutMode, flueSpace, setbackTop, setbackBottom, setbackLeft, setbackRight, uprightLength, clearOpening, configConsiderTunnels);
+    // MODIFIED: Pass layoutL_world and layoutW_world
+    const layout = calculateLayout(configBayDepth, singleBayDepth, aisleWidth, layoutL_world, layoutW_world, layoutMode, flueSpace, setbackTop, setbackBottom, setbackLeft, setbackRight, uprightLength, clearOpening, configConsiderTunnels);
 
     // --- Calculate Scaling and Centering for the content itself (independent of zoom/pan) ---
+    // MODIFIED: Use displayL_world and displayW_world
     const contentPadding = 80; // Generous padding for dimensions
     
-    const contentScaleX = (canvasWidth - contentPadding * 2) / sysWidth;
-    const contentScaleY = (canvasHeight - contentPadding * 2) / sysLength;
+    const contentScaleX = (canvasWidth - contentPadding * 2) / displayW_world;
+    const contentScaleY = (canvasHeight - contentPadding * 2) / displayL_world;
     const contentScale = Math.min(contentScaleX, contentScaleY);
 
     if (contentScale <= 0 || !isFinite(contentScale)) return;
 
-    const drawWidth = sysWidth * contentScale;
-    const drawHeight = sysLength * contentScale;
+    // MODIFIED: drawWidth/Height now based on display dimensions
+    const drawWidth = displayW_world * contentScale;
+    const drawHeight = displayL_world * contentScale;
 
     const drawOffsetX = (canvasWidth - drawWidth) / 2;
     const drawOffsetY = (canvasHeight - drawHeight) / 2;
 
-    // --- NEW: Calculate Centering for the *Layout* ---
-    const usableWidth_world = sysWidth - setbackLeft - setbackRight;
+    // --- NEW: Calculate draw positions for BOUNDARY and LAYOUT ---
+    const boundaryDrawWidth = boundaryW_world * contentScale;
+    const boundaryDrawHeight = boundaryL_world * contentScale;
+    const boundaryDrawX = drawOffsetX + (drawWidth - boundaryDrawWidth) / 2; // Center boundary in display
+    const boundaryDrawY = drawOffsetY + (drawHeight - boundaryDrawHeight) / 2; // Center boundary in display
+    
+    const layoutDrawWidth = layoutW_world * contentScale;
+    const layoutDrawHeight = layoutL_world * contentScale;
+    const layoutDrawX = drawOffsetX + (drawWidth - layoutDrawWidth) / 2; // Center layout in display
+    const layoutDrawY = drawOffsetY + (drawHeight - layoutDrawHeight) / 2; // Center layout in display
+
+    // --- NEW: Calculate Centering for the *Layout* (within its own box) ---
+    const usableWidth_world = layoutW_world - setbackLeft - setbackRight;
     const layoutOffsetX_world = (usableWidth_world - layout.totalLayoutWidth) / 2;
     // NEW: Vertical centering for layout
     const layoutOffsetY_world = (layout.usableLength - layout.totalRackLength_world) / 2;
 
     // Final offset for drawing elements (relative to the transformed canvas)
-    // MODIFIED: offsetX now accounts for left setback and centering
-    const offsetX = drawOffsetX + (setbackLeft * contentScale) + (layoutOffsetX_world * contentScale);
-    const offsetY = drawOffsetY;
+    // MODIFIED: offsetX/Y are now relative to the *layout* box
+    const offsetX = layoutDrawX + (setbackLeft * contentScale) + (layoutOffsetX_world * contentScale);
+    const offsetY = layoutDrawY;
     
     // --- NEW: Create detail params object (world values) ---
     const detailParams = {
@@ -630,7 +660,7 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config, solverResu
         ctx: warehouseCtx, scale: contentScale, offsetX, offsetY, // Use contentScale here
         bayDepth: configBayDepth, // Pass calculated *config* rack depth
         singleBayDepth: singleBayDepth, // <<< ADD THIS
-        flueSpace, sysLength,
+        flueSpace, sysLength: layoutL_world, // MODIFIED: Pass layoutL_world
         usableLength_world: layout.usableLength,
         totalRackLength_world: layout.totalRackLength_world, // NEW
         layoutOffsetY_world: layoutOffsetY_world, // NEW
@@ -645,11 +675,16 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config, solverResu
     };
     
     // ... (Drawing logic - no changes) ...
+    // MODIFIED: Draw Warehouse Boundary
+    const lengthBroken = layoutL_world > boundaryL_world;
+    const widthBroken = layoutW_world > boundaryW_world;
+    
     warehouseCtx.fillStyle = '#f8fafc'; // slate-50
-    warehouseCtx.strokeStyle = '#64748b'; // slate-500
-    warehouseCtx.lineWidth = 2 / state.scale; // Adjust line width for zoom
-    warehouseCtx.fillRect(drawOffsetX, drawOffsetY, drawWidth, drawHeight);
-    warehouseCtx.strokeRect(drawOffsetX, drawOffsetY, drawWidth, drawHeight);
+    warehouseCtx.strokeStyle = (lengthBroken || widthBroken) ? '#ef4444' : '#64748b'; // red-500 or slate-500
+    warehouseCtx.lineWidth = (lengthBroken || widthBroken) ? 4 / state.scale : 2 / state.scale; // Adjust line width
+    warehouseCtx.fillRect(boundaryDrawX, boundaryDrawY, boundaryDrawWidth, boundaryDrawHeight);
+    warehouseCtx.strokeRect(boundaryDrawX, boundaryDrawY, boundaryDrawWidth, boundaryDrawHeight);
+
 
     // Draw layout items (racks and aisles)
     layout.layoutItems.forEach(item => {
@@ -661,40 +696,42 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config, solverResu
     });
 
     // Draw Top and Bottom Setbacks
+    // MODIFIED: Use layoutDrawX/Y and layoutDrawWidth
     if (setbackTop > 0) {
         warehouseCtx.fillStyle = 'rgba(239, 68, 68, 0.1)'; // red-500 with 10% opacity
-        warehouseCtx.fillRect(drawOffsetX, drawOffsetY, drawWidth, setbackTop * contentScale);
+        warehouseCtx.fillRect(layoutDrawX, layoutDrawY, layoutDrawWidth, setbackTop * contentScale);
         warehouseCtx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
         warehouseCtx.setLineDash([5 / state.scale, 5 / state.scale]); // Adjust line dash for zoom
-        warehouseCtx.strokeRect(drawOffsetX, drawOffsetY, drawWidth, setbackTop * contentScale);
+        warehouseCtx.strokeRect(layoutDrawX, layoutDrawY, layoutDrawWidth, setbackTop * contentScale);
         warehouseCtx.setLineDash([]);
     }
     if (setbackBottom > 0) {
-        const setbackY_canvas = drawOffsetY + (sysLength - setbackBottom) * contentScale;
+        const setbackY_canvas = layoutDrawY + (layoutL_world - setbackBottom) * contentScale;
         warehouseCtx.fillStyle = 'rgba(239, 68, 68, 0.1)'; // red-500 with 10% opacity
-        warehouseCtx.fillRect(drawOffsetX, setbackY_canvas, drawWidth, setbackBottom * contentScale);
+        warehouseCtx.fillRect(layoutDrawX, setbackY_canvas, layoutDrawWidth, setbackBottom * contentScale);
         warehouseCtx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
         warehouseCtx.setLineDash([5 / state.scale, 5 / state.scale]); // Adjust line dash for zoom
-        warehouseCtx.strokeRect(drawOffsetX, setbackY_canvas, drawWidth, setbackBottom * contentScale);
+        warehouseCtx.strokeRect(layoutDrawX, setbackY_canvas, layoutDrawWidth, setbackBottom * contentScale);
         warehouseCtx.setLineDash([]);
     }
     
     // NEW: Draw Left/Right Setbacks
+    // MODIFIED: Use layoutDrawX/Y and layoutDrawHeight
     if (setbackLeft > 0) {
         warehouseCtx.fillStyle = 'rgba(239, 68, 68, 0.1)';
-        warehouseCtx.fillRect(drawOffsetX, drawOffsetY, setbackLeft * contentScale, drawHeight);
+        warehouseCtx.fillRect(layoutDrawX, layoutDrawY, setbackLeft * contentScale, layoutDrawHeight);
         warehouseCtx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
         warehouseCtx.setLineDash([5 / state.scale, 5 / state.scale]);
-        warehouseCtx.strokeRect(drawOffsetX, drawOffsetY, setbackLeft * contentScale, drawHeight);
+        warehouseCtx.strokeRect(layoutDrawX, layoutDrawY, setbackLeft * contentScale, layoutDrawHeight);
         warehouseCtx.setLineDash([]);
     }
     if (setbackRight > 0) {
-        const setbackX_canvas = drawOffsetX + (sysWidth - setbackRight) * contentScale;
+        const setbackX_canvas = layoutDrawX + (layoutW_world - setbackRight) * contentScale;
         warehouseCtx.fillStyle = 'rgba(239, 68, 68, 0.1)';
-        warehouseCtx.fillRect(setbackX_canvas, drawOffsetY, setbackRight * contentScale, drawHeight);
+        warehouseCtx.fillRect(setbackX_canvas, layoutDrawY, setbackRight * contentScale, layoutDrawHeight);
         warehouseCtx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
         warehouseCtx.setLineDash([5 / state.scale, 5 / state.scale]);
-        warehouseCtx.strokeRect(setbackX_canvas, drawOffsetY, setbackRight * contentScale, drawHeight);
+        warehouseCtx.strokeRect(setbackX_canvas, layoutDrawY, setbackRight * contentScale, layoutDrawHeight);
         warehouseCtx.setLineDash([]);
     }
 
@@ -743,22 +780,24 @@ export function drawWarehouse(sysLength, sysWidth, sysHeight, config, solverResu
     };
 
     // --- Draw Setback & Usable Dims ---
-    const dimLineX = drawOffsetX + drawWidth + (20 / state.scale); // Right side
+    // MODIFIED: Use layoutDrawX/Y
+    const dimLineX = layoutDrawX + layoutDrawWidth + (20 / state.scale); // Right side
     
     if (setbackTop > 0) {
-        drawVerticalDimLine(warehouseCtx, dimLineX, drawOffsetY, setbackTop * contentScale, `Top Setback: ${formatNumber(setbackTop)}`, state.scale);
+        drawVerticalDimLine(warehouseCtx, dimLineX, layoutDrawY, setbackTop * contentScale, `Top Setback: ${formatNumber(setbackTop)}`, state.scale);
     }
     
-    drawVerticalDimLine(warehouseCtx, dimLineX, drawOffsetY + (setbackTop * contentScale), layout.usableLength * contentScale, `Usable Length: ${formatNumber(layout.usableLength)}`, state.scale);
+    drawVerticalDimLine(warehouseCtx, dimLineX, layoutDrawY + (setbackTop * contentScale), layout.usableLength * contentScale, `Usable Length: ${formatNumber(layout.usableLength)}`, state.scale);
 
     if (setbackBottom > 0) {
-        drawVerticalDimLine(warehouseCtx, dimLineX, drawOffsetY + (setbackTop * contentScale) + (layout.usableLength * contentScale), setbackBottom * contentScale, `Bottom Setback: ${formatNumber(setbackBottom)}`, state.scale);
+        drawVerticalDimLine(warehouseCtx, dimLineX, layoutDrawY + (setbackTop * contentScale) + (layout.usableLength * contentScale), setbackBottom * contentScale, `Bottom Setback: ${formatNumber(setbackBottom)}`, state.scale);
     }
     // --- END: Setback Dims ---
 
 
     // Draw (original) dimension lines
-    drawDimensions(warehouseCtx, drawOffsetX, drawOffsetY, drawWidth, drawHeight, sysWidth, sysLength, state.scale); // Pass state.scale
+    // MODIFIED: Draw dimensions for the *layout*
+    drawDimensions(warehouseCtx, layoutDrawX, layoutDrawY, layoutDrawWidth, layoutDrawHeight, layoutW_world, layoutL_world, state.scale); // Pass state.scale
     
     // --- NEW: Update Metrics Table ---
     try {
@@ -1218,6 +1257,7 @@ function drawDetailDimensions(ctx, offsetX, offsetY, scale, params) {
 // --- MODIFIED: Main Drawing Function (Rack Detail) ---
 // REQ 3: This function now receives the global inputs and config object
 // MODIFIED: Added solverResults argument (but it's not used)
+// MODIFIED: Signature changed (L/W are unused placeholders)
 export function drawRackDetail(sysLength, sysWidth, sysHeight, config, solverResults = null) {
     // ... (canvas setup - no changes) ...
     const dpr = window.devicePixelRatio || 1;
@@ -1314,6 +1354,7 @@ export function drawRackDetail(sysLength, sysWidth, sysHeight, config, solverRes
 // --- MODIFIED: Main Drawing Function (Elevation View) ---
 // REQ 3: This function now receives the global inputs and config object
 // MODIFIED: Added solverResults argument (but it's not used)
+// MODIFIED: Signature changed (L/W are unused placeholders)
 export function drawElevationView(sysLength, sysWidth, sysHeight, config, solverResults = null) {
     // ... (canvas setup - no changes) ...
     const dpr = window.devicePixelRatio || 1;

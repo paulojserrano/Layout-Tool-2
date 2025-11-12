@@ -6,12 +6,15 @@ import {
     solverStatus, solverResultLength, solverResultWidth,
     solverResultFootprint, solverResultLocations, solverResultPerfDensity,
     exportResultsButton, // MODIFIED: Removed applySolverButton
-    // MODIFIED: Removed modal elements
-    systemLengthInput, systemWidthInput, mainViewTabs,
+    // MODIFIED: Renamed inputs
+    warehouseLengthInput, warehouseWidthInput, mainViewTabs,
     solverConfigSelect,
     clearHeightInput,
     solverExpandPDCheckbox, // NEW
     solverReduceLevelsCheckbox, // NEW
+    solverExpandConstraintsCheckbox, // NEW
+    // NEW: Warning icons
+    solverResultLengthWarning, solverResultWidthWarning,
 
     // --- NEW: Comparison Tab ---
     comparisonTabButton,
@@ -58,13 +61,22 @@ function updateSolverResults(results) {
     solverResultCapacityUtil.textContent = capacityUtil.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' %';
     solverResultRowsAndBays.textContent = `${formatNumber(results.numRows)} x ${formatNumber(results.baysPerRack)}`;
 
+    // --- NEW: Check for constraint violations ---
+    const warehouseL = parseNumber(warehouseLengthInput.value);
+    const warehouseW = parseNumber(warehouseWidthInput.value);
+    
+    const lengthBroken = warehouseL > 0 && results.L > warehouseL;
+    const widthBroken = warehouseW > 0 && results.W > warehouseW;
+
+    solverResultLengthWarning.style.display = lengthBroken ? 'inline' : 'none';
+    solverResultWidthWarning.style.display = widthBroken ? 'inline' : 'none';
 
     // --- Store and Apply ---
     solverFinalResults = results; // Store for the "Apply" button
     
-    // Apply the results to the inputs on the Configuration tab
-    systemLengthInput.value = formatNumber(solverFinalResults.L);
-    systemWidthInput.value = formatNumber(solverFinalResults.W);
+    // MODIFIED: Do NOT update the warehouse L/W inputs
+    // systemLengthInput.value = formatNumber(solverFinalResults.L);
+    // systemWidthInput.value = formatNumber(solverFinalResults.W);
 
     // MODIFIED: Show buttons
     exportResultsButton.style.display = 'block';
@@ -83,6 +95,9 @@ function updateSolverResults(results) {
 async function runSolver() {
     runSolverButton.disabled = true;
     exportResultsButton.style.display = 'none'; // MODIFIED: Hide export button
+    // NEW: Hide warnings
+    solverResultLengthWarning.style.display = 'none';
+    solverResultWidthWarning.style.display = 'none';
     
     // Get Solver Inputs
     const storageReq = parseNumber(solverStorageReqInput.value);
@@ -91,7 +106,12 @@ async function runSolver() {
     const sysHeight = parseNumber(clearHeightInput.value);
     const expandForPerformance = solverExpandPDCheckbox.checked; // NEW
     const reduceLevels = solverReduceLevelsCheckbox.checked; // NEW
+    const expandConstraints = solverExpandConstraintsCheckbox.checked; // NEW
     
+    // Get Warehouse Constraints
+    const warehouseL = parseNumber(warehouseLengthInput.value);
+    const warehouseW = parseNumber(warehouseWidthInput.value);
+
     // Get Selected Configuration
     const selectedConfigName = solverConfigSelect.value;
     const selectedConfig = configurations[selectedConfigName] || null;
@@ -118,10 +138,20 @@ async function runSolver() {
 
     function solverLoop() {
         let metrics;
+        let currentW = currentL / aspectRatio;
+
         if (!continueForPerformance) {
             // --- Loop 1: Find Storage ---
-            currentL += step;
-            let currentW = currentL / aspectRatio;
+            
+            // --- NEW: Check constraints ---
+            if (!expandConstraints && (currentL > warehouseL || currentW > warehouseW)) {
+                solverStatus.textContent = "Error: No solution found within constraints.";
+                runSolverButton.disabled = false;
+                return;
+            }
+
+            currentL += step; // Increment *after* check, *before* calc
+            currentW = currentL / aspectRatio;
             metrics = getMetrics(currentL, currentW, sysHeight, selectedConfig); 
 
             if (metrics.totalLocations >= storageReq) {
@@ -157,8 +187,17 @@ async function runSolver() {
             }
         } else {
             // --- Loop 2: Find Performance ---
-            currentL += step;
-            let currentW = currentL / aspectRatio;
+
+            // --- NEW: Check constraints ---
+            if (!expandConstraints && (currentL > warehouseL || currentW > warehouseW)) {
+                solverStatus.textContent = "Complete (Storage met, perf. needs expansion).";
+                updateSolverResults(storageMetResults); // Update with last valid result (storageMet)
+                runSolverButton.disabled = false;
+                return;
+            }
+
+            currentL += step; // Increment *after* check, *before* calc
+            currentW = currentL / aspectRatio;
             metrics = getMetrics(currentL, currentW, sysHeight, selectedConfig);
             let density = (metrics.footprint > 0) ? throughputReq / metrics.footprint : 0;
 
@@ -207,7 +246,13 @@ async function runSolver() {
 
         // Check safety break
         if (currentL > (safetyBreak * 1000)) {
-            solverStatus.textContent = `Error: No solution found under ${safetyBreak}m.`;
+            if (!continueForPerformance) {
+                solverStatus.textContent = `Error: No storage solution found under ${safetyBreak}m.`;
+            } else {
+                solverStatus.textContent = `Error: No performance solution found under ${safetyBreak}m.`;
+                // No solution, but update with the storage-met one
+                updateSolverResults(storageMetResults);
+            }
             runSolverButton.disabled = false;
             return;
         }
@@ -457,8 +502,8 @@ function exportLayout() {
  * Does not use requestAnimationFrame or interact with the DOM.
  * Automatically continues to solve for performance if storage target is met but density is too high.
  */
-// MODIFIED: Added expandForPerformance and reduceLevels arguments
-function findSolutionForConfig(storageReq, throughputReq, aspectRatio, sysHeight, config, configKey, expandForPerformance, reduceLevels) {
+// MODIFIED: Added expandForPerformance, reduceLevels, warehouseL, warehouseW arguments
+function findSolutionForConfig(storageReq, throughputReq, aspectRatio, sysHeight, config, configKey, expandForPerformance, reduceLevels, warehouseL, warehouseW) {
     return new Promise((resolve) => {
         // --- MODIFIED: maxDensity comes from metrics ---
         // const maxDensity = config['max-perf-density'] || 50;
@@ -469,8 +514,15 @@ function findSolutionForConfig(storageReq, throughputReq, aspectRatio, sysHeight
 
         // --- Loop 1: Find Storage ---
         while (currentL <= (safetyBreak * 1000)) {
-            currentL += step;
             let currentW = currentL / aspectRatio;
+            
+            // --- NEW: Check constraints ---
+            if (!expandForPerformance && (currentL > warehouseL || currentW > warehouseW)) {
+                break; // Hit constraint
+            }
+
+            currentL += step;
+            currentW = currentL / aspectRatio;
             let metrics = getMetrics(currentL, currentW, sysHeight, config);
 
             if (metrics.totalLocations >= storageReq) {
@@ -482,7 +534,7 @@ function findSolutionForConfig(storageReq, throughputReq, aspectRatio, sysHeight
 
         // --- Check results of Loop 1 ---
         if (!storageMetResults) {
-            resolve(null); // No solution found within safety break
+            resolve(null); // No solution found within safety break or constraints
             return;
         }
 
@@ -499,8 +551,15 @@ function findSolutionForConfig(storageReq, throughputReq, aspectRatio, sysHeight
         // Start from the length where storage was met
         let performanceMetMetrics = null; // NEW
         while (currentL <= (safetyBreak * 1000)) {
-            currentL += step;
             let currentW = currentL / aspectRatio;
+
+            // --- NEW: Check constraints ---
+            if (!expandForPerformance && (currentL > warehouseL || currentW > warehouseW)) {
+                break; // Hit constraint
+            }
+            
+            currentL += step;
+            currentW = currentL / aspectRatio;
             let metrics = getMetrics(currentL, currentW, sysHeight, config);
             let density = (metrics.footprint > 0) ? throughputReq / metrics.footprint : 0;
 
@@ -513,7 +572,9 @@ function findSolutionForConfig(storageReq, throughputReq, aspectRatio, sysHeight
 
         // NEW: Check if Loop 2 found a solution
         if (!performanceMetMetrics) {
-            resolve(null); // Expanded but never met performance
+            // We either hit safety break or constraint
+            // We must return the storage-met result, as that's the best we could do.
+            resolve({ ...storageMetResults, configKey, configName: config.name });
             return;
         }
 
@@ -615,6 +676,12 @@ export async function runAllConfigurationsSolver() {
     // NEW: Read checkbox states
     const expandForPerformance = solverExpandPDCheckbox.checked;
     const reduceLevels = solverReduceLevelsCheckbox.checked;
+    const expandConstraints = solverExpandConstraintsCheckbox.checked; // NEW
+    
+    // NEW: Get warehouse constraints
+    const warehouseL = parseNumber(warehouseLengthInput.value);
+    const warehouseW = parseNumber(warehouseWidthInput.value);
+
 
     if (storageReq === 0 || throughputReq === 0 || aspectRatio === 0 || sysHeight === 0) {
         runAllStatus.textContent = "Error: Please check solver inputs on main tab.";
@@ -625,6 +692,7 @@ export async function runAllConfigurationsSolver() {
     const promises = [];
     for (const configKey in configurations) {
         const config = configurations[configKey];
+        // MODIFIED: Pass new arguments
         promises.push(findSolutionForConfig(
             storageReq,
             throughputReq,
@@ -633,7 +701,9 @@ export async function runAllConfigurationsSolver() {
             config,
             configKey,
             expandForPerformance, // Pass flag
-            reduceLevels          // Pass flag
+            reduceLevels,         // Pass flag
+            warehouseL,           // Pass constraint
+            warehouseW            // Pass constraint
         ));
     }
 

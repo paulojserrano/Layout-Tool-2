@@ -1,7 +1,8 @@
 // --- Get All Inputs ---
 // Warehouse Constraints (Global)
-export const systemLengthInput = document.getElementById('systemLength');
-export const systemWidthInput = document.getElementById('systemWidth');
+// MODIFIED: Renamed
+export const warehouseLengthInput = document.getElementById('warehouseLength');
+export const warehouseWidthInput = document.getElementById('warehouseWidth');
 export const clearHeightInput = document.getElementById('clearHeight');
 
 // --- Config Tab Inputs (ALL REMOVED) ---
@@ -27,6 +28,7 @@ export const solverThroughputReqInput = document.getElementById('solverThroughpu
 export const solverAspectRatioInput = document.getElementById('solverAspectRatio');
 export const solverExpandPDCheckbox = document.getElementById('solverExpandPDCheckbox'); // NEW
 export const solverReduceLevelsCheckbox = document.getElementById('solverReduceLevelsCheckbox'); // NEW
+export const solverExpandConstraintsCheckbox = document.getElementById('solverExpandConstraintsCheckbox'); // NEW
 export const runSolverButton = document.getElementById('runSolverButton');
 export const solverStatus = document.getElementById('solverStatus');
 export const solverResultLength = document.getElementById('solverResultLength');
@@ -34,6 +36,9 @@ export const solverResultWidth = document.getElementById('solverResultWidth');
 export const solverResultFootprint = document.getElementById('solverResultFootprint');
 export const solverResultLocations = document.getElementById('solverResultLocations');
 export const solverResultPerfDensity = document.getElementById('solverResultPerfDensity');
+// NEW: Warning Icons
+export const solverResultLengthWarning = document.getElementById('solverResultLengthWarning');
+export const solverResultWidthWarning = document.getElementById('solverResultWidthWarning');
 // REMOVED: applySolverButton
 export const exportResultsButton = document.getElementById('exportResultsButton'); // NEW
 // MODIFIED: Removed Modal elements

@@ -3,7 +3,8 @@ import {
     warehouseCanvas, rackDetailCanvas, elevationCanvas,
     
     // --- NEW IMPORTS ---
-    solverConfigSelect, systemLengthInput, systemWidthInput, clearHeightInput,
+    // MODIFIED: Renamed
+    solverConfigSelect, warehouseLengthInput, warehouseWidthInput, clearHeightInput,
     comparisonTabButton // Import new tab button
 } from './dom.js';
 import { drawWarehouse, drawRackDetail, drawElevationView } from './drawing.js';
@@ -31,15 +32,19 @@ export function requestRedraw() {
         }
 
         // --- Get global inputs ---
-        const sysLength = parseNumber(systemLengthInput.value);
-        const sysWidth = parseNumber(systemWidthInput.value);
+        // MODIFIED: Use new inputs
+        const warehouseLength = parseNumber(warehouseLengthInput.value);
+        const warehouseWidth = parseNumber(warehouseWidthInput.value);
         const sysHeight = parseNumber(clearHeightInput.value);
 
         // --- Pass config to all draw functions ---
         // MODIFIED: Pass solverFinalResults as the last argument
-        drawWarehouse(sysLength, sysWidth, sysHeight, config, solverFinalResults);
-        drawRackDetail(sysLength, sysWidth, sysHeight, config, solverFinalResults);
-        drawElevationView(sysLength, sysWidth, sysHeight, config, solverFinalResults);
+        // MODIFIED: Pass warehouse L/W to drawWarehouse
+        drawWarehouse(warehouseLength, warehouseWidth, sysHeight, config, solverFinalResults);
+        
+        // MODIFIED: These functions only need height and config. L/W are placeholders.
+        drawRackDetail(0, 0, sysHeight, config, solverFinalResults);
+        drawElevationView(0, 0, sysHeight, config, solverFinalResults);
 
         rafId = null;
     });

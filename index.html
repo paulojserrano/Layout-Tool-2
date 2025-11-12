@@ -65,12 +65,14 @@
 
                             <h3 class="text-base font-semibold text-slate-900 -mb-1 pt-4">Constraints</h3>
                             <div>
-                                <label for="systemLength" class="block text-sm font-medium text-slate-700 mb-1">Max Length (mm)</label>
-                                <input type="text" id="systemLength" value="30,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <!-- MODIFIED: ID and label changed -->
+                                <label for="warehouseLength" class="block text-sm font-medium text-slate-700 mb-1">Warehouse Length (mm)</label>
+                                <input type="text" id="warehouseLength" value="30,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                             <div>
-                                <label for="systemWidth" class="block text-sm font-medium text-slate-700 mb-1">Max Width (mm)</label>
-                                <input type="text" id="systemWidth" value="25,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <!-- MODIFIED: ID and label changed -->
+                                <label for="warehouseWidth" class="block text-sm font-medium text-slate-700 mb-1">Warehouse Width (mm)</label>
+                                <input type="text" id="warehouseWidth" value="25,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                             <div>
                                 <label for="clearHeight" class="block text-sm font-medium text-slate-700 mb-1">Clear Height (mm)</label>
@@ -111,6 +113,15 @@
                                 </div>
                                 <p class="helper-text ml-6">Finds closest storage match after expansion.</p>
                             </div>
+
+                            <!-- NEW: Expand Constraints Checkbox -->
+                            <div class="pt-2">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="solverExpandConstraintsCheckbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                                    <label for="solverExpandConstraintsCheckbox" class="ml-2 block text-sm font-medium text-slate-700">Expand past footprint constraints</label>
+                                </div>
+                                <p class="helper-text ml-6">If unchecked, solver respects WH L/W.</p>
+                            </div>
                         </div>
                         
                     </div>
@@ -132,11 +143,23 @@
                         <!-- Row 1 -->
                         <div>
                             <span class="block text-sm font-medium text-slate-500">Solved Length (mm)</span>
-                            <span id="solverResultLength" class="text-2xl font-bold text-blue-600">0</span>
+                            <div class="flex items-baseline gap-2">
+                                <span id="solverResultLength" class="text-2xl font-bold text-blue-600">0</span>
+                                <!-- NEW: Warning Icon -->
+                                <svg id="solverResultLengthWarning" style="display: none;" class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M8.485 2.495c.646-1.136 2.384-1.136 3.03 0l6.29 11.007a1.75 1.75 0 01-1.515 2.498H3.71c-1.266 0-2.028-1.23-1.515-2.498l6.29-11.007zM9 11a1 1 0 112 0v1a1 1 0 11-2 0v-1zm1-6.99a.99.99 0 00-1 .99v3.01a1 1 0 102 0V5a.99.99 0 00-1-.99z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
                         </div>
                         <div>
                             <span class="block text-sm font-medium text-slate-500">Solved Width (mm)</span>
-                            <span id="solverResultWidth" class="text-2xl font-bold text-blue-600">0</span>
+                             <div class="flex items-baseline gap-2">
+                                <span id="solverResultWidth" class="text-2xl font-bold text-blue-600">0</span>
+                                <!-- NEW: Warning Icon -->
+                                <svg id="solverResultWidthWarning" style="display: none;" class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M8.485 2.495c.646-1.136 2.384-1.136 3.03 0l6.29 11.007a1.75 1.75 0 01-1.515 2.498H3.71c-1.266 0-2.028-1.23-1.515-2.498l6.29-11.007zM9 11a1 1 0 112 0v1a1 1 0 11-2 0v-1zm1-6.99a.99.99 0 00-1 .99v3.01a1 1 0 102 0V5a.99.99 0 00-1-.99z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
                         </div>
                         <div>
                             <span class="block text-sm font-medium text-slate-500">Footprint (m²)</span>

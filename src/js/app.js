@@ -3,7 +3,8 @@ import { initializeSolver } from './solver.js'; // MODIFIED
 import { configurations } from './config.js'; // Import configurations
 import {
     // --- MAIN SOLVER TAB INPUTS ---
-    systemLengthInput, systemWidthInput, clearHeightInput,
+    // MODIFIED: Renamed
+    warehouseLengthInput, warehouseWidthInput, clearHeightInput,
     solverConfigSelect, // Import solverConfigSelect
     detailViewToggle,
 
@@ -163,7 +164,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // All inputs that trigger a canvas redraw
     const redrawInputs = [
         // ONLY inputs from the Solver tab should trigger a redraw
-        systemLengthInput, systemWidthInput, clearHeightInput,
+        // MODIFIED: Renamed
+        warehouseLengthInput, warehouseWidthInput, clearHeightInput,
         detailViewToggle,
         solverConfigSelect // Redraw when the config changes
     ];
@@ -172,7 +174,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // MODIFIED: Drastically simplified list
     const numberInputs = [
         // Solver tab inputs
-        systemLengthInput, systemWidthInput, clearHeightInput,
+        // MODIFIED: Renamed
+        warehouseLengthInput, warehouseWidthInput, clearHeightInput,
         solverStorageReqInput, solverThroughputReqInput, 
         // MODIFIED: solverAspectRatioInput REMOVED
     ];
