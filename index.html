@@ -4,272 +4,260 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Layout Builder</title>
-    <!-- Load Tailwind CSS -->
+    <!-- Load Tailwind CSS (for layout utilities mainly) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="src/css/style.css">
+    <!-- Import Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-slate-50 min-h-screen flex flex-col font-sans">
+<body class="min-h-screen flex flex-col">
 
-    <header class="bg-white text-slate-900 shadow-sm border-b border-slate-200 z-10">
-        <div class="w-full max-w-screen-2xl mx-auto p-4 md:p-6 flex items-center gap-4">
-            <svg class="h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25L3 7.5m18 0v9l-9 5.25L3 16.5v-9m9 5.25v9l-9-5.25m9 5.25v-9l9-5.25" />
-            </svg>
-            <h1 class="text-xl md:text-2xl font-bold">
+    <header class="bg-white border-b-[3px] border-black z-10">
+        <div class="w-full max-w-screen-2xl mx-auto p-4 flex items-center gap-4">
+            <div class="bg-black text-white p-2 border-2 border-black shadow-[4px_4px_0px_0px_#a3e635]">
+                <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="square" stroke-linejoin="miter" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25L3 7.5m18 0v9l-9 5.25L3 16.5v-9m9 5.25v9l-9-5.25m9 5.25v-9l9-5.25" />
+                </svg>
+            </div>
+            <h1 class="text-2xl md:text-3xl font-black uppercase tracking-tight text-black drop-shadow-[2px_2px_0_#fff]">
                 Layout Builder
             </h1>
         </div>
     </header>
 
-    <!-- Main Content Area (now a flex column) -->
-    <main class="flex-1 w-full max-w-screen-2xl mx-auto p-4 md:p-6 flex flex-col gap-6">
+    <!-- Main Content Area -->
+    <main class="flex-1 w-full max-w-screen-2xl mx-auto p-4 md:p-8 flex flex-col gap-0">
 
-        <!-- 1. NEW Main Tab Navigation (Solver is default) -->
-        <nav class="bg-white rounded-lg shadow-lg -mb-2">
-            <div class="border-b border-slate-200 overflow-x-auto" id="mainViewTabs">
-                <div class="flex">
-                    <button class="main-tab-button active" data-tab="solverTabContent">Solver</button>
-                    <button class="main-tab-button" data-tab="configTabContent">Configuration</button>
-                </div>
+        <!-- 1. Main Tab Navigation -->
+        <nav class="pl-2 -mb-[3px] z-20 relative">
+            <div class="flex items-end" id="mainViewTabs">
+                <button class="main-tab-button active" data-tab="solverTabContent">Solver</button>
+                <button class="main-tab-button" data-tab="configTabContent">Configuration</button>
             </div>
         </nav>
 
-        <!-- 2. Main Tab Content: Solver (Active by default) -->
-        <div id="solverTabContent" class="main-tab-content active">
+        <!-- 2. Main Tab Content: Solver -->
+        <div id="solverTabContent" class="main-tab-content active space-y-8">
             
-            <!-- Box 1: Inputs (Full Width) -->
-            <section id="solverParametersSection" class="bg-white p-6 rounded-lg shadow-lg mb-6">
-                <h2 class="text-lg font-semibold text-slate-900 border-b border-slate-300 pb-3 mb-5">
+            <!-- Box 1: Inputs -->
+            <section id="solverParametersSection" class="nb-box p-6 bg-white">
+                <h2 class="nb-title text-xl text-black">
                     Solver Parameters
                 </h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-6">
                     
                     <!-- Col 1: Solver Settings -->
                     <div class="space-y-5">
-                        <h3 class="text-base font-semibold text-slate-900 mb-2">Solver Settings</h3>
+                        <h3 class="font-black text-lg border-l-4 border-black pl-2 bg-yellow-300 inline-block pr-2">Solver Settings</h3>
                         
-                        <!-- MODIFIED: Solver Method Section Moved to top -->
                         <div>
-                            <label for="solverMethodSelect" class="block text-sm font-medium text-slate-700 mb-1">Solver Method</label>
+                            <label for="solverMethodSelect" class="block text-sm font-bold text-black mb-1 uppercase">Solver Method</label>
                             <div>
-                                <select id="solverMethodSelect" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <select id="solverMethodSelect" class="w-full">
                                     <option value="aspectRatio" selected>Aspect Ratio</option>
                                     <option value="fixedLength">Fixed Length</option>
                                     <option value="fixedWidth">Fixed Width</option>
                                 </select>
                             </div>
                             
-                            <!-- Conditional Inputs Moved Here -->
                             <div class="mt-4">
                                 <div id="aspectRatioInputContainer">
-                                    <label for="solverAspectRatio" class="block text-sm font-medium text-slate-700 mb-1">Aspect Ratio (L / W)</label>
-                                    <input type="text" id="solverAspectRatio" value="1.0" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <p class="helper-text">e.g., 1.5 for (L = 1.5 * W)</p>
+                                    <label for="solverAspectRatio" class="block text-sm font-bold text-black mb-1 uppercase">Aspect Ratio (L / W)</label>
+                                    <input type="text" id="solverAspectRatio" value="1.0" class="w-full">
+                                    <p class="helper-text">L = 1.0 * W</p>
                                 </div>
                                 <div id="fixedLengthInputContainer" style="display: none;">
-                                    <label for="solverFixedLength" class="block text-sm font-medium text-slate-700 mb-1">Fixed Length (mm)</label>
-                                    <input type="text" id="solverFixedLength" value="50,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <label for="solverFixedLength" class="block text-sm font-bold text-black mb-1 uppercase">Fixed Length (mm)</label>
+                                    <input type="text" id="solverFixedLength" value="50,000" class="w-full">
                                 </div>
                                 <div id="fixedWidthInputContainer" style="display: none;">
-                                    <label for="solverFixedWidth" class="block text-sm font-medium text-slate-700 mb-1">Fixed Width (mm)</label>
-                                    <input type="text" id="solverFixedWidth" value="30,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <label for="solverFixedWidth" class="block text-sm font-bold text-black mb-1 uppercase">Fixed Width (mm)</label>
+                                    <input type="text" id="solverFixedWidth" value="30,000" class="w-full">
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Checkboxes moved below -->
-                        <div class="pt-2">
+                        <div class="pt-2 space-y-2">
                             <div class="flex items-center">
-                                <input type="checkbox" id="solverRespectConstraintsCheckbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                                <label for="solverRespectConstraintsCheckbox" class="ml-2 block text-sm font-medium text-slate-700">Respect footprint constraints</label>
+                                <input type="checkbox" id="solverRespectConstraintsCheckbox">
+                                <label for="solverRespectConstraintsCheckbox" class="ml-1 block text-sm font-bold text-black">Respect footprint constraints</label>
                             </div>
-                            <p class="helper-text ml-6">If unchecked, solver will expand past WH L/W.</p>
-                        </div>
 
-                        <div class="pt-2">
                             <div class="flex items-center">
-                                <input type="checkbox" id="solverExpandPDCheckbox" checked class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                                <label for="solverExpandPDCheckbox" class="ml-2 block text-sm font-medium text-slate-700">Expand system if PD > Limit</label>
+                                <input type="checkbox" id="solverExpandPDCheckbox" checked>
+                                <label for="solverExpandPDCheckbox" class="ml-1 block text-sm font-bold text-black">Expand system if PD > Limit</label>
                             </div>
-                            <p class="helper-text ml-6">If unchecked, solver stops at storage req.</p>
-                        </div>
-                        
-                        <div class="pt-2">
+                            
                             <div class="flex items-center">
-                                <input type="checkbox" id="solverReduceLevelsCheckbox" checked class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                                <label for="solverReduceLevelsCheckbox" class="ml-2 block text-sm font-medium text-slate-700">Reduce levels if expanded</label>
+                                <input type="checkbox" id="solverReduceLevelsCheckbox" checked>
+                                <label for="solverReduceLevelsCheckbox" class="ml-1 block text-sm font-bold text-black">Reduce levels if expanded</label>
                             </div>
-                            <p class="helper-text ml-6">Finds closest storage match after expansion.</p>
                         </div>
                     </div>
 
                     <!-- Col 2: Requirements -->
                     <div class="space-y-5">
-                        <h3 class="text-base font-semibold text-slate-900 mb-2">Requirements</h3>
+                        <h3 class="font-black text-lg border-l-4 border-black pl-2 bg-blue-300 inline-block pr-2">Requirements</h3>
                         <div>
-                            <label for="solverStorageReq" class="block text-sm font-medium text-slate-700 mb-1">Storage Requirement (Locations)</label>
-                            <input type="text" id="solverStorageReq" value="30,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <label for="solverStorageReq" class="block text-sm font-bold text-black mb-1 uppercase">Storage Requirement</label>
+                            <input type="text" id="solverStorageReq" value="30,000" class="w-full">
                         </div>
                         <div>
-                            <label for="solverToteSizeSelect" class="block text-sm font-medium text-slate-700 mb-1">Tote Size (WxLxH)</label>
-                            <select id="solverToteSizeSelect" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <label for="solverToteSizeSelect" class="block text-sm font-bold text-black mb-1 uppercase">Tote Size (WxLxH)</label>
+                            <select id="solverToteSizeSelect" class="w-full">
                                 <option value="650x450x300" selected>650 x 450 x 300 mm</option>
                                 <option value="850x650x400">850 x 650 x 400 mm</option>
                             </select>
                         </div>
                         <div class="pt-2">
                             <div class="flex items-center">
-                                <input type="checkbox" id="solverEquivalentVolumeCheckbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                                <label for="solverEquivalentVolumeCheckbox" class="ml-2 block text-sm font-medium text-slate-700">Consider equivalent gross volume</label>
+                                <input type="checkbox" id="solverEquivalentVolumeCheckbox">
+                                <label for="solverEquivalentVolumeCheckbox" class="ml-1 block text-sm font-bold text-black">Consider equivalent gross volume</label>
                             </div>
-                            <p class="helper-text ml-6">Run solver for other tote sizes with equivalent total volume.</p>
                         </div>
                         <div>
-                            <label for="solverThroughputReq" class="block text-sm font-medium text-slate-700 mb-1">Throughput Requirement (Total PPH)</label>
-                            <input type="text" id="solverThroughputReq" value="2,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <label for="solverThroughputReq" class="block text-sm font-bold text-black mb-1 uppercase">Throughput Req (PPH)</label>
+                            <input type="text" id="solverThroughputReq" value="2,000" class="w-full">
                         </div>
                     </div>
 
                     <!-- Col 3: Constraints -->
                     <div class="space-y-5">
-                        <h3 class="text-base font-semibold text-slate-900 mb-2">Constraints</h3>
+                        <h3 class="font-black text-lg border-l-4 border-black pl-2 bg-red-300 inline-block pr-2">Constraints</h3>
                         <div id="warehouseLengthContainer">
-                            <label for="warehouseLength" class="block text-sm font-medium text-slate-700 mb-1">Warehouse Length (mm)</label>
-                            <input type="text" id="warehouseLength" value="30,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <label for="warehouseLength" class="block text-sm font-bold text-black mb-1 uppercase">Warehouse Length (mm)</label>
+                            <input type="text" id="warehouseLength" value="30,000" class="w-full">
                         </div>
                         <div id="warehouseWidthContainer">
-                            <label for="warehouseWidth" class="block text-sm font-medium text-slate-700 mb-1">Warehouse Width (mm)</label>
-                            <input type="text" id="warehouseWidth" value="25,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <label for="warehouseWidth" class="block text-sm font-bold text-black mb-1 uppercase">Warehouse Width (mm)</label>
+                            <input type="text" id="warehouseWidth" value="25,000" class="w-full">
                         </div>
                         <div>
-                            <label for="clearHeight" class="block text-sm font-medium text-slate-700 mb-1">Clear Height (mm)</label>
-                            <input type="text" id="clearHeight" value="10,000" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <label for="clearHeight" class="block text-sm font-bold text-black mb-1 uppercase">Clear Height (mm)</label>
+                            <input type="text" id="clearHeight" value="10,000" class="w-full">
                         </div>
-                        
                     </div>
                     
                 </div>
-                <div class="mt-6">
-                    <button id="runSolverButton" class="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 disabled:opacity-50">
+                <div class="mt-8">
+                    <button id="runSolverButton" class="w-full nb-btn text-lg">
                         Find Solutions
                     </button>
-                    <p id="solverConfigStatus" class="text-center text-slate-600 mt-3 h-5"></p>
+                    <p id="solverConfigStatus" class="text-center text-black font-mono mt-3 h-5 font-bold"></p>
                 </div>
             </section>
 
-            <!-- NEW: Horizontal Configuration Results -->
+            <!-- Horizontal Configuration Results -->
             <section id="solverConfigResultsContainer" class="w-full" style="display: none;">
-                <h2 class="text-lg font-semibold text-slate-900 mb-1">
+                <h2 class="nb-title text-xl text-black mb-2">
                     Select a Solution
                 </h2>
-                <p class="text-sm text-slate-600 mb-4">Click a card to view detailed results and visualizations.</p>
-                <div id="solverConfigResultsScroller" class="flex overflow-x-auto gap-6 pb-4">
+                <p class="text-sm text-black font-mono mb-4 bg-white inline-block p-1 border border-black shadow-[2px_2px_0_#000]">Click a card to view detailed results.</p>
+                <div id="solverConfigResultsScroller" class="flex overflow-x-auto gap-6 pb-6 pt-2 px-2">
                     <!-- Config cards will be injected here -->
                 </div>
             </section>
 
-            <!-- Visualizations (Box 3) -->
-            <section id="solverVisualizationsSection" class="bg-white p-6 rounded-lg shadow-lg flex-1 flex flex-col overflow-hidden mb-6" style="display: none;">
-                <div class="flex justify-between items-center pb-3 mb-4 border-b border-slate-300">
-                    <h2 class="text-lg font-semibold text-slate-900">
-                        Visualizations
-                    </h2>
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" id="detailViewToggle" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                        <label for="detailViewToggle" class="text-sm font-medium text-slate-700">Show Detail View</label>
-                    </div>
-                </div>
+            <!-- Visualizations -->
+            <section id="solverVisualizationsSection" class="nb-box p-6 bg-white" style="display: none;">
+                <!-- FIXED: Removed the "Visualizations" h2 title -->
 
-                <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 overflow-hidden">
-                    <div class="flex flex-col h-full bg-slate-50 rounded-md overflow-hidden border border-slate-200 lg:col-span-2 lg:row-span-1">
-                        <h3 class="text-sm font-semibold text-slate-700 bg-slate-100 px-3 py-2 border-b border-slate-200">
-                            Top-Down View
-                        </h3>
-                        <div class="flex-1 w-full h-full overflow-hidden relative">
+                <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-hidden">
+                    <div class="vis-container flex flex-col h-full lg:col-span-2 lg:row-span-1">
+                        <div class="vis-header flex justify-between items-center">
+                            <span>Top-Down View</span>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="detailViewToggle" class="h-5 w-5 !shadow-none border-2">
+                                <label for="detailViewToggle" class="text-sm font-bold text-white uppercase">Show Detail</label>
+                            </div>
+                        </div>
+                        <div class="flex-1 w-full h-full overflow-hidden relative bg-white">
                             <canvas id="warehouseCanvas"></canvas>
                         </div>
                     </div>
                     
-                    <div class="flex flex-col h-full bg-slate-50 rounded-md overflow-hidden border border-slate-200 lg:col-span-1 lg:row-span-1">
-                        <h3 class="text-sm font-semibold text-slate-700 bg-slate-100 px-3 py-2 border-b border-slate-200">
-                            Elevation View
-                        </h3>
-                        <div class="flex-1 w-full h-full overflow-hidden relative">
+                    <div class="vis-container flex flex-col h-full lg:col-span-1 lg:row-span-1">
+                        <div class="vis-header">Elevation View</div>
+                        <div class="flex-1 w-full h-full overflow-hidden relative bg-white">
                              <canvas id="elevationCanvas"></canvas>
                         </div>
                     </div>
     
-                    <div class="flex flex-col h-full bg-slate-50 rounded-md overflow-hidden border border-slate-200 lg:col-span-1 lg:row-span-1">
-                         <h3 class="text-sm font-semibold text-slate-700 bg-slate-100 px-3 py-2 border-b border-slate-200">
-                            Rack Detail View
-                        </h3>
-                        <div class="flex-1 w-full h-full overflow-hidden relative">
+                    <div class="vis-container flex flex-col h-full lg:col-span-1 lg:row-span-1">
+                         <div class="vis-header">Rack Detail View</div>
+                        <div class="flex-1 w-full h-full overflow-hidden relative bg-white">
                              <canvas id="rackDetailCanvas"></canvas>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Box 2: Results (Full Width) -->
-            <section id="solverResultsSection" class="bg-white p-6 rounded-lg shadow-lg" style="display: none;">
-                <h2 class="text-lg font-semibold text-slate-900 border-b border-slate-300 pb-3 mb-5">
+            <!-- Detailed Results -->
+            <section id="solverResultsSection" class="nb-box p-6 bg-white" style="display: none;">
+                <h2 class="nb-title text-xl text-black mb-6">
                     Detailed Results
                 </h2>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-6">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-8 font-mono">
                     <!-- Row 1 -->
                     <div>
-                        <span class="block text-sm font-medium text-slate-500">Solved Length (mm)</span>
+                        <span class="block text-xs font-bold text-gray-500 uppercase mb-1">Solved Length</span>
                         <div class="flex items-baseline gap-2">
-                            <span id="solverResultLength" class="text-2xl font-bold text-blue-600">0</span>
-                            <svg id="solverResultLengthWarning" style="display: none;" class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <span id="solverResultLength" class="text-3xl font-black text-black">0</span>
+                            <span class="text-sm font-bold">mm</span>
+                            <svg id="solverResultLengthWarning" style="display: none;" class="h-6 w-6 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M8.485 2.495c.646-1.136 2.384-1.136 3.03 0l6.29 11.007a1.75 1.75 0 01-1.515 2.498H3.71c-1.266 0-2.028-1.23-1.515-2.498l6.29-11.007zM9 11a1 1 0 112 0v1a1 1 0 11-2 0v-1zm1-6.99a.99.99 0 00-1 .99v3.01a1 1 0 102 0V5a.99.99 0 00-1-.99z" clip-rule="evenodd" />
                             </svg>
                         </div>
                     </div>
                     <div>
-                        <span class="block text-sm font-medium text-slate-500">Solved Width (mm)</span>
+                        <span class="block text-xs font-bold text-gray-500 uppercase mb-1">Solved Width</span>
                          <div class="flex items-baseline gap-2">
-                            <span id="solverResultWidth" class="text-2xl font-bold text-blue-600">0</span>
-                            <svg id="solverResultWidthWarning" style="display: none;" class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <span id="solverResultWidth" class="text-3xl font-black text-black">0</span>
+                            <span class="text-sm font-bold">mm</span>
+                            <svg id="solverResultWidthWarning" style="display: none;" class="h-6 w-6 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M8.485 2.495c.646-1.136 2.384-1.136 3.03 0l6.29 11.007a1.75 1.75 0 01-1.515 2.498H3.71c-1.266 0-2.028-1.23-1.515-2.498l6.29-11.007zM9 11a1 1 0 112 0v1a1 1 0 11-2 0v-1zm1-6.99a.99.99 0 00-1 .99v3.01a1 1 0 102 0V5a.99.99 0 00-1-.99z" clip-rule="evenodd" />
                             </svg>
                         </div>
                     </div>
                     <div>
-                        <span class="block text-sm font-medium text-slate-500">Footprint (m²)</span>
-                        <span id="solverResultFootprint" class="text-2xl font-bold text-blue-600">0</span>
+                        <span class="block text-xs font-bold text-gray-500 uppercase mb-1">Footprint</span>
+                        <span id="solverResultFootprint" class="text-3xl font-black text-black">0</span>
+                        <span class="text-sm font-bold">m²</span>
                     </div>
                     
                     <!-- Row 2 -->
                     <div>
-                        <span class="block text-sm font-medium text-slate-500">Locations</span>
-                        <span id="solverResultLocations" class="text-2xl font-bold text-blue-600">0</span>
+                        <span class="block text-xs font-bold text-gray-500 uppercase mb-1">Locations</span>
+                        <span id="solverResultLocations" class="text-3xl font-black text-blue-600">0</span>
                     </div>
                     <div>
-                        <span class="block text-sm font-medium text-slate-500">Gross Volume (m³)</span>
-                        <span id="solverResultGrossVolume" class="text-2xl font-bold text-blue-600">0.0</span>
+                        <span class="block text-xs font-bold text-gray-500 uppercase mb-1">Gross Volume</span>
+                        <span id="solverResultGrossVolume" class="text-3xl font-black text-black">0.0</span>
+                        <span class="text-sm font-bold">m³</span>
                     </div>
                     <div>
-                        <span class="block text-sm font-medium text-slate-500">Total Bays</span>
-                        <span id="solverResultTotalBays" class="text-2xl font-bold text-blue-600">0</span>
+                        <span class="block text-xs font-bold text-gray-500 uppercase mb-1">Total Bays</span>
+                        <span id="solverResultTotalBays" class="text-3xl font-black text-black">0</span>
                     </div>
 
                     <!-- Row 3 -->
                     <div>
-                        <span class="block text-sm font-medium text-slate-500">Perf. Density</span>
-                        <span id="solverResultPerfDensity" class="text-2xl font-bold text-blue-600">0.0</span>
+                        <span class="block text-xs font-bold text-gray-500 uppercase mb-1">Perf. Density</span>
+                        <span id="solverResultPerfDensity" class="text-3xl font-black text-black">0.0</span>
                     </div>
                     <div>
-                        <span class="block text-sm font-medium text-slate-500">Cap. Utilization</span>
-                        <span id="solverResultCapacityUtil" class="text-2xl font-bold text-blue-600">0.0 %</span>
+                        <span class="block text-xs font-bold text-gray-500 uppercase mb-1">Cap. Utilization</span>
+                        <span id="solverResultCapacityUtil" class="text-3xl font-black text-black">0.0 %</span>
                     </div>
                     <div>
-                        <span class="block text-sm font-medium text-slate-500">Rows x Bays/Row</span>
-                        <span id="solverResultRowsAndBays" class="text-2xl font-bold text-blue-600">0 x 0</span>
+                        <span class="block text-xs font-bold text-gray-500 uppercase mb-1">Rows x Bays/Row</span>
+                        <span id="solverResultRowsAndBays" class="text-3xl font-black text-black">0 x 0</span>
                     </div>
                 </div>
                 
-                <h2 class="text-lg font-semibold text-slate-900 border-b border-slate-300 pb-3 mb-4 mt-8">
+                <h2 class="nb-title text-xl text-black mt-8 mb-4">
                     Layout Metrics
                 </h2>
                 <div class="space-y-4">
@@ -293,6 +281,7 @@
                             </tr>
                             <tr id="metric-row-std-single" style="display: none;">
                                 <td id="metric-std-single-label">Standard (Single)</td>
+                                <!-- FIXED: Removed stray 'T' -->
                                 <td><span id="metric-std-single-locs-lvl">0</span></td>
                                 <td><span id="metric-std-single-levels">0</span></td>
                                 <td><span id="metric-std-single-bays">0</span></td>
@@ -313,36 +302,36 @@
                                 <td class="total-col"><span id="metric-tun-config-locs-total">0</span></td>
                             </tr>
                              <tr class="total-row">
-                                <td class="font-bold">Total</td>
-                                <td class="total-col">—</td>
-                                <td class="total-col">—</td>
-                                <td class="total-col"><span id="metric-tot-bays">0</span></td>
-                                <td class="total-col"><span id="metric-tot-locs-total">0</span></td>
+                                <td>Total</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td><span id="metric-tot-bays">0</span></td>
+                                <td><span id="metric-tot-locs-total">0</span></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <div class="mt-6">
-                     <button id="exportResultsButton" class="w-full bg-slate-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-opacity-75" style="display: none;">
-                        Export Layout
+                <div class="mt-8">
+                     <button id="exportResultsButton" class="w-full nb-btn nb-btn-secondary text-lg" style="display: none;">
+                        Export Layout (LISP)
                     </button>
                 </div>
             </section>
             
         </div>
 
-        <!-- 3. Main Tab Content: Configuration (scrolls) -->
-        <div id="configTabContent" class="main-tab-content space-y-6 overflow-y-auto">
+        <!-- 3. Main Tab Content: Configuration -->
+        <div id="configTabContent" class="main-tab-content overflow-y-auto space-y-8">
             
-            <h2 class="text-xl font-semibold text-slate-900 px-1 pt-2">
+            <h2 class="nb-title text-xl text-black mb-2">
                 Available System Configurations
             </h2>
-            <p class="text-slate-600 -mt-4 px-1">
+            <p class="text-black font-mono mb-6">
                 These are the read-only parameter sets used by the solver.
             </p>
 
-            <div id="readOnlyConfigContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div id="readOnlyConfigContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <!-- Config cards will be injected here -->
             </div>
 

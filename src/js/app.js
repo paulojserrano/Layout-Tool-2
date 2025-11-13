@@ -49,9 +49,9 @@ function createParamHTML(label, value, unit = '') {
     }
 
     return `
-        <div class="flex justify-between items-center text-sm">
-            <span class="text-slate-600">${label}</span>
-            <span class="font-medium text-slate-900">${value}${unit ? ` ${unit}` : ''}</span>
+        <div class="config-param-row">
+            <span class="config-param-label">${label}</span>
+            <span class="config-param-value">${value}${unit ? ` ${unit}` : ''}</span>
         </div>
     `;
 }
@@ -67,8 +67,8 @@ function buildReadOnlyConfigPage() {
 
         // We'll build the HTML string for one card
         const configCardHTML = `
-            <section class="bg-white p-6 rounded-lg shadow-lg">
-                <h3 class="text-lg font-semibold text-blue-600 border-b border-slate-300 pb-3 mb-5">
+            <section class="config-card">
+                <h3>
                     ${config.name}
                 </h3>
 
@@ -76,10 +76,10 @@ function buildReadOnlyConfigPage() {
                     
                     <!-- Col 1: Rack Specs (Tote) -->
                     <div>
-                        <h4 class="text-base font-semibold text-slate-900 mb-3">
+                        <h4 class="text-sm font-black text-black mb-3 uppercase border-b-2 border-black pb-1">
                             1. Rack Specs (Tote)
                         </h4>
-                        <div class="space-y-3">
+                        <div class="space-y-1">
                             ${createParamHTML("Tote Width", config['tote-width'], 'mm')}
                             ${createParamHTML("Tote Length", config['tote-length'], 'mm')}
                             ${createParamHTML("Tote Height", config['tote-height'], 'mm')}
@@ -93,10 +93,10 @@ function buildReadOnlyConfigPage() {
 
                     <!-- Col 2: Rack Specs (Structure) -->
                     <div>
-                        <h4 class="text-base font-semibold text-slate-900 mb-3">
+                        <h4 class="text-sm font-black text-black mb-3 uppercase border-b-2 border-black pb-1">
                             2. Rack Specs (Structure)
                         </h4>
-                        <div class="space-y-3">
+                        <div class="space-y-1">
                             ${createParamHTML("Upright Length", config['upright-length'], 'mm')}
                             ${createParamHTML("Upright Width", config['upright-width'], 'mm')}
                             ${createParamHTML("Hook Allowance", config['hook-allowance'], 'mm')}
@@ -112,10 +112,10 @@ function buildReadOnlyConfigPage() {
 
                     <!-- Col 3: Vertical & Logic -->
                     <div>
-                        <h4 class="text-base font-semibold text-slate-900 mb-3">
+                        <h4 class="text-sm font-black text-black mb-3 uppercase border-b-2 border-black pb-1">
                             3. Vertical & Logic
                         </h4>
-                        <div class="space-y-3">
+                        <div class="space-y-1">
                             ${createParamHTML("Base Beam Height", config['base-beam-height'], 'mm')}
                             ${createParamHTML("Beam Width", config['beam-width'], 'mm')}
                             ${createParamHTML("Min. Clearance", config['min-clearance'], 'mm')}

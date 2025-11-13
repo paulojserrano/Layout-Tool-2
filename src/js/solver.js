@@ -36,7 +36,7 @@ import { parseNumber, formatNumber } from './utils.js';
 import { getMetrics, calculateLayout, calculateElevationLayout } from './calculations.js';
 import { requestRedraw } from './ui.js';
 import { configurations } from './config.js';
-import { exportLayout } from './export.js'; // <-- IMPORTED FROM NEW FILE
+import { exportLayout } from './export.js';
 
 export let selectedSolverResult = null;
 let allSolverResults = [];
@@ -85,10 +85,6 @@ export function updateSolverResults(results) {
     exportResultsButton.style.display = 'block';
     solverResultsSection.style.display = 'block';
 }
-
-// --- Export Layout ---
-// <<< FUNCTION REMOVED AND MOVED TO export.js >>>
-
 
 // --- Headless Solver for a Single Config ---
 /**
@@ -310,7 +306,7 @@ function createResultCard(result) {
                 <span class="comparison-card-value">${density}</span>
             </div>
             
-            <div classKA-Block class="comparison-card-metric">
+            <div class="comparison-card-metric">
                 <span class="comparison-card-label">Cap. Utilization</span>
                 <span class="comparison-card-value">${capacityUtil} %</span>
             </div>
@@ -326,7 +322,7 @@ function createResultCard(result) {
             </div>
             
             <div class="comparison-card-metric">
-                <span classs="comparison-card-label">Total Bays</span>
+                <span class="comparison-card-label">Total Bays</span>
                 <span class="comparison-card-value-small">${totalBays}</span>
             </div>
             
@@ -494,7 +490,7 @@ async function runAllConfigurationsSolver() {
         allSolverResults = validResults;
 
         if (validResults.length === 0) {
-            solverConfigResultsScroller.innerHTML = '<p class="text-slate-500 col-span-full">No valid solutions found for any configuration.</p>';
+            solverConfigResultsScroller.innerHTML = '<p class="text-black font-mono font-bold col-span-full bg-white border border-black p-2 inline-block">No valid solutions found for any configuration.</p>';
         } else {
             solverConfigResultsScroller.innerHTML = validResults.map(createResultCard).join('');
         }
