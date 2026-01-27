@@ -110,6 +110,7 @@ export let solverResultCapacityUtil;
 export let solverResultRowsAndBays;
 // NEW: PD Utilization
 export let solverResultPDUtil;
+export let solverResultRobotCount;
 
 // NEW: Unit Toggle Elements
 export let unitToggle;
@@ -285,6 +286,7 @@ export function refreshDOMElements() {
     solverResultCapacityUtil = document.getElementById('solverResultCapacityUtil');
     solverResultRowsAndBays = document.getElementById('solverResultRowsAndBays');
     solverResultPDUtil = document.getElementById('solverResultPDUtil');
+    solverResultRobotCount = document.getElementById('solverResultRobotCount');
 
     unitToggle = document.getElementById('unitToggle');
     solverResultFootprintUnit = document.getElementById('solverResultFootprintUnit');

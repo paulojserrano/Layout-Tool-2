@@ -47,7 +47,8 @@ import {
     manualToteHeightSelect,
     manualThroughputInput,
     manualClearHeightInput,
-    pdUtilCard 
+    pdUtilCard,
+    solverResultRobotCount
 
 } from './dom.js';
 import { parseNumber, formatNumber } from '../../core/utils/utils.js';
@@ -59,6 +60,19 @@ import { exportLayout } from './export.js';
 export let selectedSolverResult = null;
 let allSolverResults = [];
 let isImperial = false; 
+
+function calculateRobotCount(config, throughput) {
+    if (!config || !throughput || throughput <= 0) return "-";
+    const efficiencies = config['robot-efficiencies'];
+    if (!efficiencies) return "-";
+
+    let parts = [];
+    for (const [type, eff] of Object.entries(efficiencies)) {
+        const count = Math.ceil(throughput / eff);
+        parts.push(`${count} ${type}`);
+    }
+    return parts.join(", ");
+}
 
 export function toggleUnits() {
     isImperial = !isImperial;
@@ -165,6 +179,9 @@ export function runManualLayout() {
     // Calculate density based on manual throughput
     const manualDensity = (metrics.footprint > 0) ? throughput / metrics.footprint : 0;
 
+    // Robot Count
+    const robotCount = calculateRobotCount(config, throughput);
+
     const result = {
         configKey: configKey,
         configName: config.name,
@@ -175,6 +192,7 @@ export function runManualLayout() {
         throughputReq: throughput, 
         ...metrics, 
         density: manualDensity,
+        robotCount: robotCount,
         isExpanded: false,
         isReduced: false
     };
@@ -210,6 +228,7 @@ export function updateSolverResults(results) {
 
     if (solverResultFootprint) solverResultFootprint.textContent = footprintVal.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     if (solverResultGrossVolume) solverResultGrossVolume.textContent = grossVolVal.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    if (solverResultRobotCount) solverResultRobotCount.textContent = results.robotCount || "-";
 
     // PD UTILIZATION CALCULATION & STYLING
     const capacityUtil = (results.density > 0 && results.maxPerfDensity > 0) ? (results.density / results.maxPerfDensity) * 100 : 0;
@@ -281,6 +300,7 @@ function findSolutionForConfig(storageReq, throughputReq, sysHeight, config, con
                 if (!storageMetResults) { resolve(null); return; }
                 if (storageMetResults.density <= storageMetResults.maxPerfDensity || !expandForPerformance) {
                     storageMetResults.throughputReq = throughputReq;
+                    storageMetResults.robotCount = calculateRobotCount(config, throughputReq);
                     resolve({ ...storageMetResults, configKey, configName: config.name });
                     return;
                 }
@@ -377,9 +397,11 @@ function findSolutionForConfig(storageReq, throughputReq, sysHeight, config, con
                 }
             }
             bestMetrics.throughputReq = throughputReq;
+            bestMetrics.robotCount = calculateRobotCount(config, throughputReq);
             resolve({ ...bestMetrics, configKey, configName: config.name });
         } else if (storageMetResults) {
             storageMetResults.throughputReq = throughputReq;
+            storageMetResults.robotCount = calculateRobotCount(config, throughputReq);
             resolve({ ...storageMetResults, configKey, configName: config.name });
         } else {
             resolve(null);
@@ -396,6 +418,7 @@ function createResultCard(result) {
     const capacityUtil = ((result.density > 0 && result.maxPerfDensity > 0) ? (result.density / result.maxPerfDensity) * 100 : 0).toLocaleString('en-US', { maximumFractionDigits: 1 });
     const totalBays = formatNumber(result.totalBays);
     const rowsAndBays = `${formatNumber(result.numRows)} x ${formatNumber(result.baysPerRack)}`;
+    const robotCount = result.robotCount || "-";
 
     return `
         <div class="comparison-card" data-config-key="${result.configKey}">
@@ -403,6 +426,7 @@ function createResultCard(result) {
             <div class="comparison-card-metric"><span class="comparison-card-label">Footprint (m²)</span><span class="comparison-card-value">${footprint}</span></div>
             <div class="comparison-card-metric"><span class="comparison-card-label">Perf. Density</span><span class="comparison-card-value">${density}</span></div>
             <div class="comparison-card-metric"><span class="comparison-card-label">PD Utilization</span><span class="comparison-card-value">${capacityUtil} %</span></div>
+            <div class="comparison-card-metric"><span class="comparison-card-label">Est. Robots</span><span class="comparison-card-value">${robotCount}</span></div>
             <div class="comparison-card-metric"><span class="comparison-card-label">Locations</span><span class="comparison-card-value-small">${locations}</span></div>
             <div class="comparison-card-metric"><span class="comparison-card-label">Gross Volume (m³)</span><span class="comparison-card-value-small">${grossVolume}</span></div>
             <div class="comparison-card-metric"><span class="comparison-card-label">Total Bays</span><span class="comparison-card-value-small">${totalBays}</span></div>
