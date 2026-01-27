@@ -350,7 +350,7 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
 }
 
 // --- Main Drawing Function (Top-Down) ---
-export function drawWarehouse(warehouseLength, warehouseWidth, sysHeight, config, solverResults = null) {
+export function drawWarehouse(warehouseLength, warehouseWidth, sysHeight, config, solverResults = null, targetCanvas = null) {
     if (!config) return 1;
 
     // --- 1. DATA PREPARATION & LAYOUT CALCULATION (CRITICAL: Runs before canvas check) ---
@@ -588,27 +588,43 @@ export function drawWarehouse(warehouseLength, warehouseWidth, sysHeight, config
 
     // --- 3. CANVAS DRAWING (Conditional) ---
     const dpr = window.devicePixelRatio || 1;
-    const canvasWidth = warehouseCanvas.clientWidth;
-    const canvasHeight = warehouseCanvas.clientHeight;
 
-    if (canvasWidth === 0 || canvasHeight === 0) return 1;
+    // Select canvas and context
+    const canvas = targetCanvas || warehouseCanvas;
+    const ctx = targetCanvas ? targetCanvas.getContext('2d') : warehouseCtx;
 
-    warehouseCanvas.width = canvasWidth * dpr;
-    warehouseCanvas.height = canvasHeight * dpr;
-    warehouseCtx.setTransform(1, 0, 0, 1, 0, 0);
-    warehouseCtx.scale(dpr, dpr);
-    warehouseCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+    let canvasWidth, canvasHeight;
+    if (targetCanvas) {
+         // Assuming targetCanvas is sized in physical pixels
+         canvasWidth = targetCanvas.width / dpr;
+         canvasHeight = targetCanvas.height / dpr;
+    } else {
+        canvasWidth = warehouseCanvas.clientWidth;
+        canvasHeight = warehouseCanvas.clientHeight;
+        if (canvasWidth === 0 || canvasHeight === 0) return 1;
+        warehouseCanvas.width = canvasWidth * dpr;
+        warehouseCanvas.height = canvasHeight * dpr;
+    }
 
-    const state = getViewState(warehouseCanvas);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    warehouseCtx.translate(state.offsetX, state.offsetY);
-    warehouseCtx.scale(state.scale, state.scale);
+    let state;
+    if (targetCanvas) {
+        state = { scale: 1, offsetX: 0, offsetY: 0 };
+    } else {
+        state = getViewState(warehouseCanvas);
+    }
+
+    ctx.translate(state.offsetX, state.offsetY);
+    ctx.scale(state.scale, state.scale);
 
     const displayL_world = Math.max(boundaryL_world, layoutL_world);
     const displayW_world = Math.max(boundaryW_world, layoutW_world);
 
     if (displayL_world <= 0 || displayW_world <= 0) {
-        showErrorOnCanvas(warehouseCtx, "Invalid dimensions.", canvasWidth, canvasHeight);
+        showErrorOnCanvas(ctx, "Invalid dimensions.", canvasWidth, canvasHeight);
         return 1;
     }
 
@@ -650,7 +666,7 @@ export function drawWarehouse(warehouseLength, warehouseWidth, sysHeight, config
     };
 
     const drawParams = {
-        ctx: warehouseCtx, scale: contentScale, offsetX, offsetY,
+        ctx: ctx, scale: contentScale, offsetX, offsetY,
         bayDepth: configBayDepth,
         singleBayDepth: singleBayDepth,
         flueSpace, 
@@ -683,22 +699,22 @@ export function drawWarehouse(warehouseLength, warehouseWidth, sysHeight, config
     });
 
     if (isDetailView && layout.paths && layout.paths.length > 0) { 
-        warehouseCtx.save();
-        warehouseCtx.setLineDash([]); 
+        ctx.save();
+        ctx.setLineDash([]);
 
         layout.paths.forEach(path => {
-            warehouseCtx.beginPath();
+            ctx.beginPath();
             
             if (path.type === 'aisle' || path.type === 'acr') {
-                warehouseCtx.strokeStyle = 'rgba(249, 115, 22, 0.5)'; 
+                ctx.strokeStyle = 'rgba(249, 115, 22, 0.5)';
             } else {
-                warehouseCtx.strokeStyle = 'rgba(168, 85, 247, 0.5)'; 
+                ctx.strokeStyle = 'rgba(168, 85, 247, 0.5)';
             }
 
             if (path.type === 'cross-aisle') {
-                 warehouseCtx.lineWidth = 1 / state.scale; 
+                 ctx.lineWidth = 1 / state.scale;
             } else {
-                 warehouseCtx.lineWidth = 2 / state.scale;
+                 ctx.lineWidth = 2 / state.scale;
             }
             
             const x1 = layoutDrawX + (path.x1 * contentScale);
@@ -706,50 +722,50 @@ export function drawWarehouse(warehouseLength, warehouseWidth, sysHeight, config
             const x2 = layoutDrawX + (path.x2 * contentScale);
             const y2 = layoutDrawY + (path.y2 * contentScale);
 
-            warehouseCtx.moveTo(x1, y1);
-            warehouseCtx.lineTo(x2, y2);
-            warehouseCtx.stroke();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
         });
-        warehouseCtx.restore();
+        ctx.restore();
     }
 
     if (setbackTop > 0) {
-        warehouseCtx.fillStyle = 'rgba(239, 68, 68, 0.1)';
-        warehouseCtx.fillRect(layoutDrawX, layoutDrawY, layoutDrawWidth, setbackTop * contentScale);
-        warehouseCtx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
-        warehouseCtx.setLineDash([5 / state.scale, 5 / state.scale]);
-        warehouseCtx.strokeRect(layoutDrawX, layoutDrawY, layoutDrawWidth, setbackTop * contentScale);
-        warehouseCtx.setLineDash([]);
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.1)';
+        ctx.fillRect(layoutDrawX, layoutDrawY, layoutDrawWidth, setbackTop * contentScale);
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+        ctx.setLineDash([5 / state.scale, 5 / state.scale]);
+        ctx.strokeRect(layoutDrawX, layoutDrawY, layoutDrawWidth, setbackTop * contentScale);
+        ctx.setLineDash([]);
     }
     if (setbackBottom > 0) {
         const setbackY_canvas = layoutDrawY + (layoutL_world - setbackBottom) * contentScale;
-        warehouseCtx.fillStyle = 'rgba(239, 68, 68, 0.1)';
-        warehouseCtx.fillRect(layoutDrawX, setbackY_canvas, layoutDrawWidth, setbackBottom * contentScale);
-        warehouseCtx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
-        warehouseCtx.setLineDash([5 / state.scale, 5 / state.scale]);
-        warehouseCtx.strokeRect(layoutDrawX, setbackY_canvas, layoutDrawWidth, setbackBottom * contentScale);
-        warehouseCtx.setLineDash([]);
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.1)';
+        ctx.fillRect(layoutDrawX, setbackY_canvas, layoutDrawWidth, setbackBottom * contentScale);
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+        ctx.setLineDash([5 / state.scale, 5 / state.scale]);
+        ctx.strokeRect(layoutDrawX, setbackY_canvas, layoutDrawWidth, setbackBottom * contentScale);
+        ctx.setLineDash([]);
     }
     
     if (setbackLeft > 0) {
-        warehouseCtx.fillStyle = 'rgba(239, 68, 68, 0.1)';
-        warehouseCtx.fillRect(layoutDrawX, layoutDrawY, setbackLeft * contentScale, layoutDrawHeight);
-        warehouseCtx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
-        warehouseCtx.setLineDash([5 / state.scale, 5 / state.scale]);
-        warehouseCtx.strokeRect(layoutDrawX, layoutDrawY, setbackLeft * contentScale, layoutDrawHeight);
-        warehouseCtx.setLineDash([]);
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.1)';
+        ctx.fillRect(layoutDrawX, layoutDrawY, setbackLeft * contentScale, layoutDrawHeight);
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+        ctx.setLineDash([5 / state.scale, 5 / state.scale]);
+        ctx.strokeRect(layoutDrawX, layoutDrawY, setbackLeft * contentScale, layoutDrawHeight);
+        ctx.setLineDash([]);
     }
     if (setbackRight > 0) {
         const setbackX_canvas = layoutDrawX + (layoutW_world - setbackRight) * contentScale;
-        warehouseCtx.fillStyle = 'rgba(239, 68, 68, 0.1)';
-        warehouseCtx.fillRect(setbackX_canvas, layoutDrawY, setbackRight * contentScale, layoutDrawHeight);
-        warehouseCtx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
-        warehouseCtx.setLineDash([5 / state.scale, 5 / state.scale]);
-        warehouseCtx.strokeRect(setbackX_canvas, layoutDrawY, setbackRight * contentScale, layoutDrawHeight);
-        warehouseCtx.setLineDash([]);
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.1)';
+        ctx.fillRect(setbackX_canvas, layoutDrawY, setbackRight * contentScale, layoutDrawHeight);
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+        ctx.setLineDash([5 / state.scale, 5 / state.scale]);
+        ctx.strokeRect(setbackX_canvas, layoutDrawY, setbackRight * contentScale, layoutDrawHeight);
+        ctx.setLineDash([]);
     }
 
-    drawDimensions(warehouseCtx, layoutDrawX, layoutDrawY, layoutDrawWidth, layoutDrawHeight, layoutW_world, layoutL_world, state.scale);
+    drawDimensions(ctx, layoutDrawX, layoutDrawY, layoutDrawWidth, layoutDrawHeight, layoutW_world, layoutL_world, state.scale);
     
     return contentScale;
 }

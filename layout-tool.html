@@ -19,6 +19,7 @@
             }
         }
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans h-screen flex overflow-hidden selection:bg-blue-100 selection:text-blue-700">
 
@@ -274,7 +275,8 @@
                                      <div class="p-3 bg-slate-50 rounded border border-slate-100 flex flex-col justify-center"><div class="text-[10px] text-slate-400 font-bold uppercase">Gross Vol.</div><div class="flex items-baseline gap-1"><span id="solverResultGrossVolume" class="text-xl font-black text-slate-800 leading-tight">0</span><span class="text-sm font-medium text-slate-500" id="solverResultGrossVolumeUnit">m³</span></div></div>
                                      <div class="p-3 bg-slate-50 rounded border border-slate-100 flex flex-col justify-center"><div class="text-[10px] text-slate-400 font-bold uppercase">Est. Robots</div><div id="solverResultRobotCount" class="text-xl font-black text-slate-800 leading-tight">-</div></div>
                                 </div>
-                                <div class="flex justify-end">
+                                <div class="flex justify-end gap-3">
+                                    <button id="exportSummaryButton" class="text-[10px] font-bold text-blue-600 hover:underline">Export Summary</button>
                                     <button id="exportResultsButton" class="text-[10px] font-bold text-blue-600 hover:underline">Export LISP</button>
                                 </div>
                             </div>

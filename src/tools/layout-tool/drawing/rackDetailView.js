@@ -14,22 +14,37 @@ import {
 
 // --- Main Drawing Function (Rack Detail) ---
 // MODIFIED: Return Content Scale
-export function drawRackDetail(sysLength, sysWidth, sysHeight, config, solverResults = null) {
+export function drawRackDetail(sysLength, sysWidth, sysHeight, config, solverResults = null, targetCanvas = null) {
     const dpr = window.devicePixelRatio || 1;
-    const canvasWidth = rackDetailCanvas.clientWidth;
-    const canvasHeight = rackDetailCanvas.clientHeight;
 
-    if (canvasWidth === 0 || canvasHeight === 0) return 1;
+    const canvas = targetCanvas || rackDetailCanvas;
+    const ctx = targetCanvas ? targetCanvas.getContext('2d') : rackDetailCtx;
 
-    rackDetailCanvas.width = canvasWidth * dpr;
-    rackDetailCanvas.height = canvasHeight * dpr;
-    rackDetailCtx.setTransform(1, 0, 0, 1, 0, 0); 
-    rackDetailCtx.scale(dpr, dpr);
+    let canvasWidth, canvasHeight;
+    if (targetCanvas) {
+         canvasWidth = targetCanvas.width / dpr;
+         canvasHeight = targetCanvas.height / dpr;
+    } else {
+        canvasWidth = rackDetailCanvas.clientWidth;
+        canvasHeight = rackDetailCanvas.clientHeight;
 
-    const ctx = rackDetailCtx;
+        if (canvasWidth === 0 || canvasHeight === 0) return 1;
+
+        rackDetailCanvas.width = canvasWidth * dpr;
+        rackDetailCanvas.height = canvasHeight * dpr;
+    }
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    const state = getViewState(rackDetailCanvas);
+    let state;
+    if (targetCanvas) {
+        state = { scale: 1, offsetX: 0, offsetY: 0 };
+    } else {
+        state = getViewState(rackDetailCanvas);
+    }
 
     ctx.translate(state.offsetX, state.offsetY);
     ctx.scale(state.scale, state.scale);

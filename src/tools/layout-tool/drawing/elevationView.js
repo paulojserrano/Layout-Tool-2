@@ -10,22 +10,37 @@ import {
 } from './drawingUtils.js';
 
 // --- Main Drawing Function (Elevation View) ---
-export function drawElevationView(sysLength, sysWidth, sysHeight, config, solverResults = null) {
+export function drawElevationView(sysLength, sysWidth, sysHeight, config, solverResults = null, targetCanvas = null) {
     const dpr = window.devicePixelRatio || 1;
-    const canvasWidth = elevationCanvas.clientWidth;
-    const canvasHeight = elevationCanvas.clientHeight;
 
-    if (canvasWidth === 0 || canvasHeight === 0) return 1;
+    const canvas = targetCanvas || elevationCanvas;
+    const ctx = targetCanvas ? targetCanvas.getContext('2d') : elevationCtx;
 
-    elevationCanvas.width = canvasWidth * dpr;
-    elevationCanvas.height = canvasHeight * dpr;
-    elevationCtx.setTransform(1, 0, 0, 1, 0, 0); 
-    elevationCtx.scale(dpr, dpr);
+    let canvasWidth, canvasHeight;
+    if (targetCanvas) {
+         canvasWidth = targetCanvas.width / dpr;
+         canvasHeight = targetCanvas.height / dpr;
+    } else {
+        canvasWidth = elevationCanvas.clientWidth;
+        canvasHeight = elevationCanvas.clientHeight;
 
-    const ctx = elevationCtx;
+        if (canvasWidth === 0 || canvasHeight === 0) return 1;
+
+        elevationCanvas.width = canvasWidth * dpr;
+        elevationCanvas.height = canvasHeight * dpr;
+    }
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    const state = getViewState(elevationCanvas);
+    let state;
+    if (targetCanvas) {
+        state = { scale: 1, offsetX: 0, offsetY: 0 };
+    } else {
+        state = getViewState(elevationCanvas);
+    }
 
     ctx.translate(state.offsetX, state.offsetY);
     ctx.scale(state.scale, state.scale);

@@ -102,6 +102,7 @@ export let solverResultPerfDensity;
 export let solverResultLengthWarning;
 export let solverResultWidthWarning;
 export let exportResultsButton;
+export let exportSummaryButton;
 
 // --- NEW: Solver Result Metrics ---
 export let solverResultGrossVolume;
@@ -280,6 +281,7 @@ export function refreshDOMElements() {
     solverResultLengthWarning = document.getElementById('solverResultLengthWarning');
     solverResultWidthWarning = document.getElementById('solverResultWidthWarning');
     exportResultsButton = document.getElementById('exportResultsButton');
+    exportSummaryButton = document.getElementById('exportSummaryButton');
 
     solverResultGrossVolume = document.getElementById('solverResultGrossVolume');
     solverResultTotalBays = document.getElementById('solverResultTotalBays');
