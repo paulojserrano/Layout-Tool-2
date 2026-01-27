@@ -142,7 +142,8 @@ export const configurations = {
         "robot-path-gap": 600,
         "acr-path-offset-top": 1000,
         "acr-path-offset-bottom": 1000,
-        "amr-path-offset": 850
+        "amr-path-offset": 850,
+        "robot-efficiencies": { "K50": 18, "ACR": 45 }
     },
     "hps3-e2-650-td": {
         "name": "HPS3-E2 - 650x450 - Triple Deep",
@@ -216,7 +217,8 @@ export const configurations = {
         "robot-path-gap": 600,
         "acr-path-offset-top": 1000,
         "acr-path-offset-bottom": 1000,
-        "amr-path-offset": 850
+        "amr-path-offset": 850,
+        "robot-efficiencies": { "K50": 18, "ACR": 45 }
     },
     "hps3-e2-850-dd": {
         "name": "HPS3-E2 - 850x650 - Double Deep",
@@ -292,7 +294,8 @@ export const configurations = {
         "robot-path-gap": 810,
         "acr-path-offset-top": 1000,
         "acr-path-offset-bottom": 1000,
-        "amr-path-offset": 850
+        "amr-path-offset": 850,
+        "robot-efficiencies": { "K50": 18, "ACR": 45 }
     },
     "hps3-e2-850-td": {
         "name": "HPS3-E2 - 850x650 - Triple Deep",
@@ -369,7 +372,8 @@ export const configurations = {
         "robot-path-gap": [810, 850],
         "acr-path-offset-top": 1000,
         "acr-path-offset-bottom": 1000,
-        "amr-path-offset": 850
+        "amr-path-offset": 850,
+        "robot-efficiencies": { "K50": 18, "ACR": 45 }
     },
     "HPC": {
         "name": "HPC - Single Deep",
@@ -432,6 +436,7 @@ export const configurations = {
         "sprinkler-threshold": 4572,
         "sprinkler-clearance": 200,
         "max-perf-density": 2.5,
+        "robot-efficiencies": { "Climber": 20 }
     },
     "HPC-DD": {
         "name": "HPC - Double Deep",
@@ -495,6 +500,7 @@ export const configurations = {
         "sprinkler-threshold": 4572,
         "sprinkler-clearance": 200,
         "max-perf-density": 2.5,
+        "robot-efficiencies": { "Climber": 20 }
     }
 };
 

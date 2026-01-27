@@ -53,31 +53,18 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
 
     if (rackHeight_canvas <= 0 || verticalBayTemplate.length === 0) return; 
 
-    const drawLabel = (text, x, y) => {
+    const drawLabel = (text, x, y, w, h) => {
         ctx.save();
         ctx.fillStyle = '#334155';
-        ctx.font = 'bold 14px "Space Mono", monospace';
+        const fontSize = Math.min(w, h) * 0.4;
+        ctx.font = `bold ${fontSize}px "Space Mono", monospace`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(text, x, y);
+        if (fontSize >= 5) {
+            ctx.fillText(text, x, y);
+        }
         ctx.restore();
     };
-
-    if (colIndexStart !== undefined) {
-        const labelY = rackY_canvas_start - 25;
-        if (rackType === 'single') {
-             const cx = rackX_canvas + (rackDepth_world * scale) / 2;
-             drawLabel(colIndexStart, cx, labelY);
-        } else if (rackType === 'double') {
-             const r1_w = bayDepth * scale;
-             const r2_w = bayDepth * scale;
-             const flue_w = flueSpace * scale;
-             const cx1 = rackX_canvas + r1_w / 2;
-             const cx2 = rackX_canvas + r1_w + flue_w + r2_w / 2;
-             drawLabel(colIndexStart, cx1, labelY);
-             drawLabel(colIndexStart + 1, cx2, labelY);
-        }
-    }
 
     if (isDetailView) {
         const isSingleDeepRack = Math.abs(rackDepth_world - singleBayDepth) < 0.01;
@@ -134,6 +121,10 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
                     ctx.fillStyle = '#64748b';
                     drawStructure(ctx, -bayDrawWidth_canvas / 2, -bay_w_canvas / 2, bayDrawWidth_canvas, bay_w_canvas, scale, bayDetailHelpersParams, 'starter');
                     ctx.restore();
+
+                    if (isFirstBay && colIndexStart !== undefined) drawLabel(colIndexStart, centerX, centerY, bay_w_canvas, bayDrawWidth_canvas);
+                    if (isFirstRack) drawLabel(i + 1, centerX, centerY, bay_w_canvas, bayDrawWidth_canvas);
+
                 } else if (rackType === 'double') {
                     const rack1_w_canvas = bayDepth * scale;
                     const flue_w_canvas = flueSpace * scale;
@@ -147,6 +138,10 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
                     ctx.fillStyle = '#64748b';
                     drawStructure(ctx, -bayDrawWidth_canvas / 2, -rack1_w_canvas / 2, bayDrawWidth_canvas, rack1_w_canvas, scale, bayDetailHelpersParams, 'starter');
                     ctx.restore();
+
+                    if (isFirstBay && colIndexStart !== undefined) drawLabel(colIndexStart, centerX1, centerY1, rack1_w_canvas, bayDrawWidth_canvas);
+                    if (isFirstRack) drawLabel(i + 1, centerX1, centerY1, rack1_w_canvas, bayDrawWidth_canvas);
+
                     const centerX2 = rack2_x_canvas + rack2_w_canvas / 2;
                     const centerY2 = bayY_canvas + bayDrawWidth_canvas / 2;
                     ctx.save();
@@ -154,6 +149,8 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
                     ctx.fillStyle = '#64748b';
                     drawStructure(ctx, -bayDrawWidth_canvas / 2, -rack2_w_canvas / 2, bayDrawWidth_canvas, rack2_w_canvas, scale, bayDetailHelpersParams, 'starter');
                     ctx.restore();
+
+                    if (isFirstBay && colIndexStart !== undefined) drawLabel(colIndexStart + 1, centerX2, centerY2, rack2_w_canvas, bayDrawWidth_canvas);
                 }
                 currentY_canvas += bayDrawWidth_canvas; 
             }
@@ -161,11 +158,6 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
             bayY_canvas = currentY_canvas;
             bayDrawWidth_canvas = clearOpening_canvas + uprightLength_canvas;
             
-            if (isFirstRack) {
-                const bayCenterY = bayY_canvas + bayDrawWidth_canvas / 2;
-                drawLabel(i + 1, rackX_canvas - 25, bayCenterY);
-            }
-
             if (rackType === 'single') {
                 const bay_w_canvas = rackDepth_world * scale; 
                 const centerX = rackX_canvas + bay_w_canvas / 2;
@@ -180,6 +172,9 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
                 drawTotes(ctx, -bayDrawWidth_canvas / 2, -bay_w_canvas / 2, scale, bayDetailHelpersParams, 'repeater', isTunnel, isBackpack);
                 
                 ctx.restore();
+
+                if (isFirstBay && colIndexStart !== undefined) drawLabel(colIndexStart, centerX, centerY, bay_w_canvas, bayDrawWidth_canvas);
+                if (isFirstRack) drawLabel(i + 1, centerX, centerY, bay_w_canvas, bayDrawWidth_canvas);
 
             } else if (rackType === 'double') {
                 const rack1_w_canvas = bayDepth * scale; 
@@ -197,6 +192,9 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
                 drawTotes(ctx, -bayDrawWidth_canvas / 2, -rack1_w_canvas / 2, scale, bayDetailHelpersParams, 'repeater', isTunnel, isBackpack);
                 ctx.restore();
 
+                if (isFirstBay && colIndexStart !== undefined) drawLabel(colIndexStart, centerX1, centerY1, rack1_w_canvas, bayDrawWidth_canvas);
+                if (isFirstRack) drawLabel(i + 1, centerX1, centerY1, rack1_w_canvas, bayDrawWidth_canvas);
+
                 const centerX2 = rack2_x_canvas + rack2_w_canvas / 2;
                 const centerY2 = bayY_canvas + bayDrawWidth_canvas / 2;
                 ctx.save();
@@ -206,6 +204,8 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
                 drawStructure(ctx, -bayDrawWidth_canvas / 2, -rack2_w_canvas / 2, bayDrawWidth_canvas, rack2_w_canvas, scale, bayDetailHelpersParams, 'repeater');
                 drawTotes(ctx, -bayDrawWidth_canvas / 2, -rack2_w_canvas / 2, scale, bayDetailHelpersParams, 'repeater', isTunnel, isBackpack);
                 ctx.restore();
+
+                if (isFirstBay && colIndexStart !== undefined) drawLabel(colIndexStart + 1, centerX2, centerY2, rack2_w_canvas, bayDrawWidth_canvas);
             }
             
             currentY_canvas += bayDrawWidth_canvas; 
@@ -240,11 +240,6 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
                     
                     const bayHeight_canvas = (clearOpening_canvas + uprightLength_canvas);
 
-                    if (isFirstRack) {
-                        const bayCenterY = currentY_canvas + bayHeight_canvas / 2;
-                        drawLabel(i + 1, rackX_canvas - 25, bayCenterY);
-                    }
-
                     ctx.fillRect(rackX_canvas, currentY_canvas, rackWidth_canvas, bayHeight_canvas);
                     ctx.strokeRect(rackX_canvas, currentY_canvas, rackWidth_canvas, bayHeight_canvas);
                     
@@ -253,6 +248,11 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
                     ctx.moveTo(rackX_canvas, currentY_canvas + clearOpening_canvas);
                     ctx.lineTo(rackX_canvas + rackWidth_canvas, currentY_canvas + clearOpening_canvas);
                     ctx.stroke();
+
+                    const centerX = rackX_canvas + rackWidth_canvas / 2;
+                    const centerY = currentY_canvas + bayHeight_canvas / 2;
+                    if (i === 0 && colIndexStart !== undefined) drawLabel(colIndexStart, centerX, centerY, rackWidth_canvas, bayHeight_canvas);
+                    if (isFirstRack) drawLabel(i + 1, centerX, centerY, rackWidth_canvas, bayHeight_canvas);
 
                     currentY_canvas += bayHeight_canvas;
                 }
@@ -289,11 +289,6 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
 
                     const bayHeight_canvas = (clearOpening_canvas + uprightLength_canvas);
 
-                    if (isFirstRack) {
-                        const bayCenterY = currentY_canvas + bayHeight_canvas / 2;
-                        drawLabel(i + 1, rackX_canvas - 25, bayCenterY);
-                    }
-
                     ctx.fillRect(rackX_canvas, currentY_canvas, rack1_width_canvas, bayHeight_canvas);
                     ctx.strokeRect(rackX_canvas, currentY_canvas, rack1_width_canvas, bayHeight_canvas);
                     
@@ -301,6 +296,11 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
                     ctx.moveTo(rackX_canvas, currentY_canvas + clearOpening_canvas);
                     ctx.lineTo(rackX_canvas + rack1_width_canvas, currentY_canvas + clearOpening_canvas);
                     ctx.stroke();
+
+                    const centerX1 = rackX_canvas + rack1_width_canvas / 2;
+                    const centerY1 = currentY_canvas + bayHeight_canvas / 2;
+                    if (i === 0 && colIndexStart !== undefined) drawLabel(colIndexStart, centerX1, centerY1, rack1_width_canvas, bayHeight_canvas);
+                    if (isFirstRack) drawLabel(i + 1, centerX1, centerY1, rack1_width_canvas, bayHeight_canvas);
 
                     currentY_canvas += bayHeight_canvas;
                 }
@@ -335,6 +335,10 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
                     ctx.moveTo(rack2_x_canvas, currentY_canvas + clearOpening_canvas);
                     ctx.lineTo(rack2_x_canvas + rack2_width_canvas, currentY_canvas + clearOpening_canvas);
                     ctx.stroke();
+
+                    const centerX2 = rack2_x_canvas + rack2_width_canvas / 2;
+                    const centerY2 = currentY_canvas + bayHeight_canvas / 2;
+                    if (i === 0 && colIndexStart !== undefined) drawLabel(colIndexStart + 1, centerX2, centerY2, rack2_width_canvas, bayHeight_canvas);
 
                     currentY_canvas += bayHeight_canvas;
                 }
