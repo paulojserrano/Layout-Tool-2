@@ -40,7 +40,9 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
         verticalBayTemplate, 
         totalRackLength_world, 
         layoutOffsetY_world, 
-        numTunnelLevels 
+        numTunnelLevels,
+        colIndexStart,
+        isFirstRack
     } = params;
 
     const uprightLength_world = detailParams.uprightLength_world;
@@ -50,6 +52,32 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
     const rackHeight_canvas = totalRackLength_world * scale; 
 
     if (rackHeight_canvas <= 0 || verticalBayTemplate.length === 0) return; 
+
+    const drawLabel = (text, x, y) => {
+        ctx.save();
+        ctx.fillStyle = '#334155';
+        ctx.font = 'bold 14px "Space Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, x, y);
+        ctx.restore();
+    };
+
+    if (colIndexStart !== undefined) {
+        const labelY = rackY_canvas_start - 25;
+        if (rackType === 'single') {
+             const cx = rackX_canvas + (rackDepth_world * scale) / 2;
+             drawLabel(colIndexStart, cx, labelY);
+        } else if (rackType === 'double') {
+             const r1_w = bayDepth * scale;
+             const r2_w = bayDepth * scale;
+             const flue_w = flueSpace * scale;
+             const cx1 = rackX_canvas + r1_w / 2;
+             const cx2 = rackX_canvas + r1_w + flue_w + r2_w / 2;
+             drawLabel(colIndexStart, cx1, labelY);
+             drawLabel(colIndexStart + 1, cx2, labelY);
+        }
+    }
 
     if (isDetailView) {
         const isSingleDeepRack = Math.abs(rackDepth_world - singleBayDepth) < 0.01;
@@ -133,6 +161,11 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
             bayY_canvas = currentY_canvas;
             bayDrawWidth_canvas = clearOpening_canvas + uprightLength_canvas;
             
+            if (isFirstRack) {
+                const bayCenterY = bayY_canvas + bayDrawWidth_canvas / 2;
+                drawLabel(i + 1, rackX_canvas - 25, bayCenterY);
+            }
+
             if (rackType === 'single') {
                 const bay_w_canvas = rackDepth_world * scale; 
                 const centerX = rackX_canvas + bay_w_canvas / 2;
@@ -206,6 +239,12 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
                     ctx.lineWidth = 0.5;
                     
                     const bayHeight_canvas = (clearOpening_canvas + uprightLength_canvas);
+
+                    if (isFirstRack) {
+                        const bayCenterY = currentY_canvas + bayHeight_canvas / 2;
+                        drawLabel(i + 1, rackX_canvas - 25, bayCenterY);
+                    }
+
                     ctx.fillRect(rackX_canvas, currentY_canvas, rackWidth_canvas, bayHeight_canvas);
                     ctx.strokeRect(rackX_canvas, currentY_canvas, rackWidth_canvas, bayHeight_canvas);
                     
@@ -249,6 +288,12 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
                     ctx.strokeStyle = '#64748b'; ctx.lineWidth = 0.5;
 
                     const bayHeight_canvas = (clearOpening_canvas + uprightLength_canvas);
+
+                    if (isFirstRack) {
+                        const bayCenterY = currentY_canvas + bayHeight_canvas / 2;
+                        drawLabel(i + 1, rackX_canvas - 25, bayCenterY);
+                    }
+
                     ctx.fillRect(rackX_canvas, currentY_canvas, rack1_width_canvas, bayHeight_canvas);
                     ctx.strokeRect(rackX_canvas, currentY_canvas, rack1_width_canvas, bayHeight_canvas);
                     
@@ -615,9 +660,21 @@ export function drawWarehouse(warehouseLength, warehouseWidth, sysHeight, config
         clearOpening: layout.clearOpening
     };
     
+    let rackColumnCounter = 1;
+    let firstRackFound = false;
+
     layout.layoutItems.forEach(item => {
         if (item.type === 'rack') {
-            drawRack(item.x, item.width, item.rackType, drawParams);
+            const currentDrawParams = {
+                ...drawParams,
+                colIndexStart: rackColumnCounter,
+                isFirstRack: !firstRackFound
+            };
+
+            drawRack(item.x, item.width, item.rackType, currentDrawParams);
+
+            if (!firstRackFound) firstRackFound = true;
+            rackColumnCounter += (item.rackType === 'double') ? 2 : 1;
         }
     });
 
