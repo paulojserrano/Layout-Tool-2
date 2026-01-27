@@ -37,9 +37,12 @@ import {
     solverExpandPDCheckbox,
     solverReduceLevelsCheckbox,
     manualSystemConfigSelect,
-    manualToteSizeSelect
+    manualToteSizeSelect,
+    exportSummaryButton
 
 } from './dom.js';
+
+import { exportSummaryPdf } from './pdfExport.js';
 
 function createParamHTML(label, value, unit = '') {
     if (label === null || value === null) {
@@ -252,6 +255,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     initializeUI(redrawInputs, numberInputs, decimalInputs);
     initializeSolver();
+
+    if (exportSummaryButton) exportSummaryButton.addEventListener('click', exportSummaryPdf);
 
     if (solverRespectConstraintsCheckbox) solverRespectConstraintsCheckbox.addEventListener('change', updateSolverMethodUI);
     if (solverMethodSelect) solverMethodSelect.addEventListener('change', updateSolverMethodUI);
