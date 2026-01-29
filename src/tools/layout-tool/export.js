@@ -311,6 +311,35 @@ export function exportLayout() {
     });
 
     const lispStrings = [];
+
+    // --- NEW: Inject Rebuild Context for AI ---
+    const rebuildContext = {
+        systemDimensions: {
+            length: sysLength,
+            width: sysWidth
+        },
+        config: config,
+        pathSettings: pathSettings,
+        metrics: {
+            totalLocations: selectedSolverResult.totalLocations,
+            totalBays: selectedSolverResult.totalBays,
+            footprint: selectedSolverResult.footprint,
+            numTunnelLevels: numTunnelLevels
+        }
+    };
+
+    try {
+        const jsonString = JSON.stringify(rebuildContext, null, 2);
+        const commentedJson = jsonString.split('\n').map(line => `;; ${line}`).join('\n');
+        lispStrings.push(`;; AI_CONTEXT_START`);
+        lispStrings.push(commentedJson);
+        lispStrings.push(`;; AI_CONTEXT_END`);
+        lispStrings.push(`;;`);
+    } catch (e) {
+        console.error("Error generating rebuild context:", e);
+        lispStrings.push(`;; Error generating AI context: ${e.message}`);
+    }
+    // --- END Rebuild Context ---
     
     // Add Metrics as comments
     lispStrings.push(`;; Layout Metrics`);
