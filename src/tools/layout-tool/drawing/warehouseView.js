@@ -57,11 +57,11 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
     const drawLabel = (text, x, y, w, h) => {
         ctx.save();
         ctx.fillStyle = '#334155';
-        const fontSize = Math.min(w, h) * 0.4;
+        const fontSize = Math.min(w, h) * 0.5;
         ctx.font = `bold ${fontSize}px "Space Mono", monospace`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        if (fontSize * viewScale >= 5) {
+        if (fontSize * viewScale >= 4) {
             ctx.fillText(text, x, y);
         }
         ctx.restore();
