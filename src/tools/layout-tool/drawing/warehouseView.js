@@ -42,7 +42,8 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
         layoutOffsetY_world, 
         numTunnelLevels,
         colIndexStart,
-        isFirstRack
+        isFirstRack,
+        viewScale = 1
     } = params;
 
     const uprightLength_world = detailParams.uprightLength_world;
@@ -60,7 +61,7 @@ function drawRack(x_world, rackDepth_world, rackType, params) {
         ctx.font = `bold ${fontSize}px "Space Mono", monospace`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        if (fontSize >= 5) {
+        if (fontSize * viewScale >= 5) {
             ctx.fillText(text, x, y);
         }
         ctx.restore();
@@ -677,7 +678,8 @@ export function drawWarehouse(warehouseLength, warehouseWidth, sysHeight, config
         totalRackLength_world: layout.totalRackLength_world,
         layoutOffsetY_world: layoutOffsetY_world,
         numTunnelLevels: numTunnelLevels,
-        clearOpening: layout.clearOpening
+        clearOpening: layout.clearOpening,
+        viewScale: state.scale
     };
     
     let rackColumnCounter = 1;
