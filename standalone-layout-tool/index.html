@@ -19,8 +19,6 @@
             }
         }
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans h-screen flex overflow-hidden selection:bg-blue-100 selection:text-blue-700">
 
@@ -38,12 +36,6 @@
                 </nav>
             </div>
             <div class="flex items-center gap-3">
-                 <div id="headerUserProfileContainer" class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-xs font-bold text-white shadow-lg">U</div>
-                    <div class="flex-1 min-w-0">
-                        <p id="userProfileName" class="text-sm font-medium text-slate-700 truncate">Standalone User</p>
-                    </div>
-                </div>
                 <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wide">v2.3.0</span>
             </div>
         </header>
@@ -296,7 +288,6 @@
                                      <div class="p-3 bg-slate-50 rounded border border-slate-100 flex flex-col justify-center"><div class="text-[10px] text-slate-400 font-bold uppercase">Est. Robots</div><div id="solverResultRobotCount" class="text-xl font-black text-slate-800 leading-tight">-</div></div>
                                 </div>
                                 <div class="flex justify-end gap-3">
-                                    <button id="exportSummaryButton" class="text-[10px] font-bold text-blue-600 hover:underline">Export Summary</button>
                                     <button id="exportResultsButton" class="text-[10px] font-bold text-blue-600 hover:underline">Export LISP</button>
                                 </div>
                             </div>
