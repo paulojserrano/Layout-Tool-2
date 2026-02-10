@@ -1,6 +1,6 @@
 import {
     solverStorageReqInput, solverThroughputReqInput,
-    solverToteSizeSelect, solverToteHeightSelect,
+    solverTotePresetSelect, solverToteFaceInput, solverToteDepthInput, solverToteHeightInput,
     solverEquivalentVolumeCheckbox,
     runSolverButton,
     solverConfigStatus,
@@ -109,7 +109,7 @@ export function reSolveCurrent() {
     const storageReq = parseNumber(solverStorageReqInput.value);
     const throughputReq = parseNumber(solverThroughputReqInput.value);
     const sysHeight = parseNumber(clearHeightInput.value);
-    const toteHeight = solverToteHeightSelect ? Number(solverToteHeightSelect.value) : 300;
+    const toteHeight = solverToteHeightInput ? Number(solverToteHeightInput.value) : 300;
 
     const warehouseL = parseNumber(warehouseLengthInput.value);
     const warehouseW = parseNumber(warehouseWidthInput.value);
@@ -435,6 +435,76 @@ function createResultCard(result) {
     `;
 }
 
+function generateSystemConfigs(face, depth, height) {
+    // Templates
+    const templateDD = configurations['hps3-e2-650-dd'];
+    const templateTD = configurations['hps3-e2-650-td'];
+    const templateSingle = configurations['HPC'];
+    const templateDDHPC = configurations['HPC-DD'];
+
+    const generated = [];
+
+    // Common calculations
+    const estimatedAisleWidth = depth + 550; // Heuristic
+    const targetBayWidth = 2200;
+    const qtyPerBay = Math.max(1, Math.floor(targetBayWidth / face));
+
+    // 1. Custom Double Deep
+    if (templateDD) {
+        const newKey = `CUSTOM-DD-${face}x${depth}`;
+        const newConfig = JSON.parse(JSON.stringify(templateDD)); // Deep clone
+        newConfig.name = `Double Deep (${face}x${depth})`;
+        newConfig['tote-width'] = depth;
+        newConfig['tote-length'] = face;
+        newConfig['tote-height'] = height;
+        newConfig['tote-qty-per-bay'] = qtyPerBay;
+        newConfig['aisle-width-low'] = estimatedAisleWidth;
+        newConfig['aisle-width-high'] = estimatedAisleWidth;
+
+        // Add to global configurations so it can be retrieved later
+        configurations[newKey] = newConfig;
+        generated.push(newKey);
+    }
+
+    // 2. Custom Triple Deep
+    if (templateTD) {
+        const newKey = `CUSTOM-TD-${face}x${depth}`;
+        const newConfig = JSON.parse(JSON.stringify(templateTD));
+        newConfig.name = `Triple Deep (${face}x${depth})`;
+        newConfig['tote-width'] = depth;
+        newConfig['tote-length'] = face;
+        newConfig['tote-height'] = height;
+        newConfig['tote-qty-per-bay'] = qtyPerBay;
+        newConfig['aisle-width-low'] = estimatedAisleWidth;
+        newConfig['aisle-width-high'] = estimatedAisleWidth;
+
+        configurations[newKey] = newConfig;
+        generated.push(newKey);
+    }
+
+    // 3. Custom Single Deep
+    if (templateSingle) {
+        const newKey = `CUSTOM-SD-${face}x${depth}`;
+        const newConfig = JSON.parse(JSON.stringify(templateSingle));
+        newConfig.name = `Single Deep (${face}x${depth})`;
+        newConfig['tote-width'] = depth;
+        newConfig['tote-length'] = face;
+        newConfig['tote-height'] = height;
+        newConfig['tote-qty-per-bay'] = Math.max(1, qtyPerBay - 1); // Usually less dense horizontally? Or same?
+        // Let's keep consistent qtyPerBay logic or just stick to what template uses relative to its size
+        // Single Deep template uses 3 totes for 450 width. 3 * 450 = 1350. Maybe narrower bays.
+        // Let's stick to calculated qtyPerBay.
+        newConfig['tote-qty-per-bay'] = qtyPerBay;
+        newConfig['aisle-width-low'] = 900; // Fixed for HPC? Or scale? Let's scale lightly.
+        newConfig['aisle-width-high'] = 900;
+
+        configurations[newKey] = newConfig;
+        generated.push(newKey);
+    }
+
+    return generated;
+}
+
 async function runAllConfigurationsSolver() {
     if (runSolverButton) runSolverButton.disabled = true;
     if (solverConfigStatus) solverConfigStatus.textContent = "Running all configurations...";
@@ -452,7 +522,11 @@ async function runAllConfigurationsSolver() {
     const solverMethod = solverMethodSelect ? solverMethodSelect.value : 'aspectRatio';
     const throughputReq = solverThroughputReqInput ? parseNumber(solverThroughputReqInput.value) : 0;
     const sysHeight = clearHeightInput ? parseNumber(clearHeightInput.value) : 0;
-    const toteHeight = solverToteHeightSelect ? Number(solverToteHeightSelect.value) : 300;
+
+    // Use new inputs
+    const toteFace = solverToteFaceInput ? parseNumber(solverToteFaceInput.value) : 450;
+    const toteDepth = solverToteDepthInput ? parseNumber(solverToteDepthInput.value) : 650;
+    const toteHeight = solverToteHeightInput ? parseNumber(solverToteHeightInput.value) : 300;
 
     const pathSettings = {
         topAMRLines: robotPathTopLinesInput ? parseNumber(robotPathTopLinesInput.value) : 3,
@@ -465,41 +539,10 @@ async function runAllConfigurationsSolver() {
         userSetbackRight: userSetbackRightInput ? parseNumber(userSetbackRightInput.value) : 500
     };
 
-    const tasksToRun = [];
-    const selectedToteSize = solverToteSizeSelect ? solverToteSizeSelect.value : '650x450x300';
-    const isEquivalentVolume = solverEquivalentVolumeCheckbox ? solverEquivalentVolumeCheckbox.checked : false;
-
-    // Volume calculation
-    const vol650 = (650 / 1000) * (450 / 1000) * (toteHeight / 1000);
-    const vol850 = (850 / 1000) * (650 / 1000) * (toteHeight / 1000);
-
-    let selectedKeys = [];
-    let otherKeys = [];
-    let selectedVolume = 0;
-    let otherVolume = 0;
-
-    const is650Tote = (config) => (config['tote-width'] === 650 && config['tote-length'] === 450);
-    const is850Tote = (config) => (config['tote-width'] === 850 && config['tote-length'] === 650);
-
-    const size650String = "650x450x300";
-    const size850String = "850x650x400";
-
-    if (selectedToteSize === size650String) {
-        selectedKeys = Object.keys(configurations).filter(k => is650Tote(configurations[k]));
-        otherKeys = Object.keys(configurations).filter(k => is850Tote(configurations[k]));
-        selectedVolume = vol650;
-        otherVolume = vol850;
-    } else if (selectedToteSize === size850String) {
-        selectedKeys = Object.keys(configurations).filter(k => is850Tote(configurations[k]));
-        otherKeys = Object.keys(configurations).filter(k => is650Tote(configurations[k]));
-        selectedVolume = vol850;
-        otherVolume = vol650;
-    }
-
     const promises = [];
 
     if (solverMethod === 'manual') {
-        resolve(null);
+        // do nothing
     } else {
         const originalStorageReq = solverStorageReqInput ? parseNumber(solverStorageReqInput.value) : 0;
         const expandForPerformance = solverExpandPDCheckbox ? solverExpandPDCheckbox.checked : true;
@@ -526,22 +569,14 @@ async function runAllConfigurationsSolver() {
             return;
         }
 
-        selectedKeys.forEach(configKey => {
-            tasksToRun.push({ configKey: configKey, storageReq: originalStorageReq, isEquivalent: false });
-        });
+        // Generate Configs based on inputs
+        const configKeysToRun = generateSystemConfigs(toteFace, toteDepth, toteHeight);
 
-        if (isEquivalentVolume && otherVolume > 0 && selectedVolume > 0) {
-            const equivalentStorageReq = Math.round((originalStorageReq * selectedVolume) / otherVolume);
-            otherKeys.forEach(configKey => {
-                tasksToRun.push({ configKey: configKey, storageReq: equivalentStorageReq, isEquivalent: true });
-            });
-        }
-
-        for (const task of tasksToRun) {
-            const config = configurations[task.configKey];
+        for (const key of configKeysToRun) {
+            const config = configurations[key];
             if (!config) continue;
             promises.push(findSolutionForConfig(
-                task.storageReq, throughputReq, sysHeight, config, task.configKey,
+                originalStorageReq, throughputReq, sysHeight, config, key,
                 expandForPerformance, reduceLevels, warehouseL, warehouseW, respectConstraints,
                 solverOptions, pathSettings, toteHeight
             ));

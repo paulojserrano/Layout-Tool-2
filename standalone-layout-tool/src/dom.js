@@ -30,9 +30,12 @@ export let runButtonText;
 // --- NEW: Solver Elements ---
 export let solverStorageReqInput;
 export let solverThroughputReqInput;
-export let solverToteSizeSelect;
-// NEW: Solver Height Select
-export let solverToteHeightSelect;
+
+// NEW: Flexible Tote Inputs
+export let solverTotePresetSelect;
+export let solverToteFaceInput;
+export let solverToteDepthInput;
+export let solverToteHeightInput;
 
 export let solverEquivalentVolumeCheckbox;
 export let solverExpandPDCheckbox;
@@ -213,8 +216,11 @@ export function refreshDOMElements() {
 
     solverStorageReqInput = document.getElementById('solverStorageReq');
     solverThroughputReqInput = document.getElementById('solverThroughputReq');
-    solverToteSizeSelect = document.getElementById('solverToteSizeSelect');
-    solverToteHeightSelect = document.getElementById('solverToteHeightSelect');
+
+    solverTotePresetSelect = document.getElementById('solverTotePresetSelect');
+    solverToteFaceInput = document.getElementById('solverToteFaceInput');
+    solverToteDepthInput = document.getElementById('solverToteDepthInput');
+    solverToteHeightInput = document.getElementById('solverToteHeightInput');
 
     solverEquivalentVolumeCheckbox = document.getElementById('solverEquivalentVolumeCheckbox');
     solverExpandPDCheckbox = document.getElementById('solverExpandPDCheckbox');
