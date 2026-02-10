@@ -45,6 +45,9 @@ import {
     manualWidthSlider,
     manualToteSizeSelect,
     manualToteHeightSelect,
+    manualCustomToteWidth,
+    manualCustomToteLength,
+    manualCustomToteHeight,
     manualThroughputInput,
     manualClearHeightInput,
     pdUtilCard,
@@ -157,11 +160,35 @@ export function runManualLayout() {
     
     // Config
     const configKey = manualSystemConfigSelect.value;
-    const config = configurations[configKey];
+    // Create shallow copy to allow overrides
+    const config = { ...configurations[configKey] };
     
     const H = parseNumber(manualClearHeightInput.value);
-    const toteHeight = parseNumber(manualToteHeightSelect.value);
     const throughput = parseNumber(manualThroughputInput.value);
+
+    // --- Determine Tote Dimensions ---
+    if (manualToteSizeSelect) {
+        if (manualToteSizeSelect.value === 'custom') {
+            if (manualCustomToteWidth) config['tote-width'] = parseNumber(manualCustomToteWidth.value);
+            if (manualCustomToteLength) config['tote-length'] = parseNumber(manualCustomToteLength.value);
+        } else {
+             // Parse from value like "650x450x300"
+             const parts = manualToteSizeSelect.value.split('x');
+             if (parts.length >= 2) {
+                 config['tote-width'] = parseInt(parts[0]);
+                 config['tote-length'] = parseInt(parts[1]);
+             }
+        }
+    }
+
+    let toteHeight = 300;
+    if (manualToteHeightSelect) {
+        if (manualToteHeightSelect.value === 'custom') {
+            if (manualCustomToteHeight) toteHeight = parseNumber(manualCustomToteHeight.value);
+        } else {
+            toteHeight = parseNumber(manualToteHeightSelect.value);
+        }
+    }
 
     const pathSettings = {
         topAMRLines: robotPathTopLinesInput ? parseNumber(robotPathTopLinesInput.value) : 3,

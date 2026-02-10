@@ -38,11 +38,18 @@ import {
     solverReduceLevelsCheckbox,
     manualSystemConfigSelect,
     manualToteSizeSelect,
+    manualCustomToteContainer,
+    manualCustomToteWidth,
+    manualCustomToteLength,
+    manualToteHeightSelect,
+    manualCustomToteHeightContainer,
+    manualCustomToteHeight,
     exportSummaryButton
 
 } from './dom.js';
 
 import { exportSummaryPdf } from './pdfExport.js';
+import { runManualLayout } from './solver.js';
 
 function createParamHTML(label, value, unit = '') {
     if (label === null || value === null) {
@@ -224,6 +231,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Trigger once
         manualSystemConfigSelect.dispatchEvent(new Event('change'));
     }
+
+    // --- NEW: Custom Tote Size Handlers ---
+    if (manualToteSizeSelect) {
+        manualToteSizeSelect.addEventListener('change', () => {
+            if (manualToteSizeSelect.value === 'custom') {
+                if (manualCustomToteContainer) manualCustomToteContainer.classList.remove('hidden');
+            } else {
+                if (manualCustomToteContainer) manualCustomToteContainer.classList.add('hidden');
+            }
+            // Trigger run
+            setTimeout(runManualLayout, 50);
+        });
+    }
+
+    if (manualToteHeightSelect) {
+        manualToteHeightSelect.addEventListener('change', () => {
+            if (manualToteHeightSelect.value === 'custom') {
+                if (manualCustomToteHeightContainer) manualCustomToteHeightContainer.classList.remove('hidden');
+            } else {
+                if (manualCustomToteHeightContainer) manualCustomToteHeightContainer.classList.add('hidden');
+            }
+            setTimeout(runManualLayout, 50);
+        });
+    }
+
+    const manualCustomInputs = [manualCustomToteWidth, manualCustomToteLength, manualCustomToteHeight];
+    manualCustomInputs.forEach(input => {
+        if (input) {
+            input.addEventListener('input', () => setTimeout(runManualLayout, 200));
+        }
+    });
 
     // Moved inside DOMContentLoaded after refreshDOMElements()
     const redrawInputs = [

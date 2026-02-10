@@ -135,6 +135,7 @@
                                         <select id="manualToteSizeSelect" class="input-field">
                                             <option value="650x450x300">650 x 450</option>
                                             <option value="850x650x400">850 x 650</option>
+                                            <option value="custom">Custom</option>
                                         </select>
                                     </div>
                                     <div>
@@ -142,8 +143,25 @@
                                         <select id="manualToteHeightSelect" class="input-field">
                                             <option value="300" selected>300 mm</option>
                                             <option value="400">400 mm</option>
+                                            <option value="custom">Custom</option>
                                         </select>
                                     </div>
+                                </div>
+
+                                <div id="manualCustomToteContainer" class="hidden grid grid-cols-2 gap-3 bg-blue-50 p-3 rounded border border-blue-100 mb-3">
+                                    <div>
+                                        <label for="manualCustomToteWidth" class="input-label">Custom Width</label>
+                                        <input type="number" id="manualCustomToteWidth" value="650" class="input-field">
+                                    </div>
+                                    <div>
+                                        <label for="manualCustomToteLength" class="input-label">Custom Length</label>
+                                        <input type="number" id="manualCustomToteLength" value="450" class="input-field">
+                                    </div>
+                                </div>
+
+                                <div id="manualCustomToteHeightContainer" class="hidden bg-blue-50 p-3 rounded border border-blue-100 mb-3">
+                                    <label for="manualCustomToteHeight" class="input-label">Custom Height</label>
+                                    <input type="number" id="manualCustomToteHeight" value="300" class="input-field">
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-3">

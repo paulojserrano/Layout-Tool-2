@@ -56,7 +56,12 @@ export let solverManualWidth;
 export let manualSystemConfigSelect;
 // NEW: Manual Elements
 export let manualToteSizeSelect;
+export let manualCustomToteContainer;
+export let manualCustomToteWidth;
+export let manualCustomToteLength;
 export let manualToteHeightSelect;
+export let manualCustomToteHeightContainer;
+export let manualCustomToteHeight;
 export let manualThroughputInput;
 export let manualClearHeightInput;
 export let manualLengthSlider;
@@ -240,7 +245,12 @@ export function refreshDOMElements() {
     solverManualWidth = document.getElementById('solverManualWidth');
     manualSystemConfigSelect = document.getElementById('manualSystemConfigSelect');
     manualToteSizeSelect = document.getElementById('manualToteSizeSelect');
+    manualCustomToteContainer = document.getElementById('manualCustomToteContainer');
+    manualCustomToteWidth = document.getElementById('manualCustomToteWidth');
+    manualCustomToteLength = document.getElementById('manualCustomToteLength');
     manualToteHeightSelect = document.getElementById('manualToteHeightSelect');
+    manualCustomToteHeightContainer = document.getElementById('manualCustomToteHeightContainer');
+    manualCustomToteHeight = document.getElementById('manualCustomToteHeight');
     manualThroughputInput = document.getElementById('manualThroughputInput');
     manualClearHeightInput = document.getElementById('manualClearHeightInput');
     manualLengthSlider = document.getElementById('manualLengthSlider');
