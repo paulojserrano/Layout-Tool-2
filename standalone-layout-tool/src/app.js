@@ -21,8 +21,8 @@ import {
     solverStorageReqContainer,
     solverEquivalentVolumeContainer,
     solverOptionsContainer,
-    solverToteSizeSelect,
-    solverToteHeightSelect,
+    solverTotePresetSelect,
+    solverToteHeightInput,
     robotPathTopLinesInput,
     robotPathBottomLinesInput,
     robotPathAddLeftACRCheckbox,
@@ -140,10 +140,7 @@ function updateSolverMethodUI() {
     solverEquivalentVolumeContainer.style.display = 'block';
     solverOptionsContainer.style.display = 'block';
 
-    const allTypesOption = solverToteSizeSelect.querySelector('option[value="all"]');
-    if (allTypesOption) {
-        allTypesOption.style.display = 'none';
-    }
+    // Removed logic for 'all' option in solverToteSizeSelect as it's replaced
 
     if (!respectConstraints) {
         warehouseLengthContainer.style.display = 'none';
@@ -215,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
         robotPathAddLeftACRCheckbox, robotPathAddRightACRCheckbox,
         userSetbackTopInput, userSetbackBottomInput,
         userSetbackLeftInput, userSetbackRightInput,
-        solverToteHeightSelect
+        solverToteHeightInput
     ];
 
     const numberInputs = [

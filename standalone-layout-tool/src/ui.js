@@ -6,7 +6,8 @@ import {
     robotPathAddLeftACRCheckbox, robotPathAddRightACRCheckbox,
     userSetbackTopInput, userSetbackBottomInput,
     userSetbackLeftInput, userSetbackRightInput,
-    adjustedLocationsDisplay, solverToteHeightSelect,
+    adjustedLocationsDisplay,
+    solverTotePresetSelect, solverToteFaceInput, solverToteDepthInput, solverToteHeightInput,
     visTabsNav, viewContainerWarehouse, viewContainerElevation, viewContainerDetail,
     viewContainer3D,
     leftPanel, rightPanel, runButtonText,
@@ -128,7 +129,7 @@ export function requestRedraw(maintainVisualScale = false) {
 
         // Priority: Manual Height > Result Height > Input Height
         const sysHeight = selectedSolverResult.sysHeight ? selectedSolverResult.sysHeight : parseNumber(clearHeightInput.value);
-        const toteHeight = selectedSolverResult.resolvedToteHeight ? selectedSolverResult.resolvedToteHeight : (solverToteHeightSelect ? Number(solverToteHeightSelect.value) : 300);
+        const toteHeight = selectedSolverResult.resolvedToteHeight ? selectedSolverResult.resolvedToteHeight : (solverToteHeightInput ? Number(solverToteHeightInput.value) : 300);
 
         const metrics = getMetrics(drawL, drawW, sysHeight, config, null, selectedSolverResult.maxLevels, toteHeight);
 
@@ -495,7 +496,38 @@ export function initializeUI(redrawInputs, numberInputs, decimalInputs = []) {
 
     if (solverConfigResultsScroller) solverConfigResultsScroller.addEventListener('click', handleConfigCardClick);
 
-    if (solverToteHeightSelect) solverToteHeightSelect.addEventListener('change', () => requestRedraw(false));
+    // --- NEW: Tote Preset Logic ---
+    if (solverTotePresetSelect) {
+        solverTotePresetSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (val === 'custom') return;
+
+            // Format: "WxDxH" e.g. "650x450x300"
+            // Wait, standard string "650x450x300" -> Face(W), Depth(D), Height(H)?
+            // In config logic: 650x450 usually implies 650 Depth, 450 Face.
+            // Let's parse.
+            const parts = val.split('x');
+            if (parts.length === 3) {
+                // Preset string order: Depth x Face x Height based on previous select logic (650x450x300)
+                // Wait, previous options were "650x450x300".
+                // And config for 650 DD has tote-width=650 (Depth), tote-length=450 (Face).
+                // So the string is Depth x Face x Height.
+                if (solverToteDepthInput) solverToteDepthInput.value = parts[0];
+                if (solverToteFaceInput) solverToteFaceInput.value = parts[1];
+                if (solverToteHeightInput) solverToteHeightInput.value = parts[2];
+                requestRedraw(false);
+            }
+        });
+    }
+
+    const setCustomPreset = () => {
+        if (solverTotePresetSelect) solverTotePresetSelect.value = 'custom';
+        requestRedraw(false);
+    };
+
+    if (solverToteFaceInput) solverToteFaceInput.addEventListener('input', setCustomPreset);
+    if (solverToteDepthInput) solverToteDepthInput.addEventListener('input', setCustomPreset);
+    if (solverToteHeightInput) solverToteHeightInput.addEventListener('input', setCustomPreset);
 
     initializeVisTabs();
 }

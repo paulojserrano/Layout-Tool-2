@@ -82,20 +82,28 @@
                             <div class="px-4 py-3 border-b border-slate-100 bg-white"><h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">2. Requirements</h3></div>
                             <div class="p-4 space-y-4">
                                 <div id="solverRequirementsContainer" class="space-y-4">
-                                    <div class="grid grid-cols-2 gap-3">
+                                    <div class="space-y-3">
                                         <div>
-                                            <label for="solverToteSizeSelect" class="input-label">Tote Footprint</label>
-                                            <select id="solverToteSizeSelect" class="input-field">
-                                                <option value="650x450x300">650 x 450</option>
-                                                <option value="850x650x400">850 x 650</option>
+                                            <label for="solverTotePresetSelect" class="input-label">Tote Preset</label>
+                                            <select id="solverTotePresetSelect" class="input-field">
+                                                <option value="650x450x300" selected>650 x 450 (Standard)</option>
+                                                <option value="850x650x400">850 x 650 (Large)</option>
+                                                <option value="custom">Custom Dimensions</option>
                                             </select>
                                         </div>
-                                        <div>
-                                            <label for="solverToteHeightSelect" class="input-label">Tote Height</label>
-                                            <select id="solverToteHeightSelect" class="input-field">
-                                                <option value="300" selected>300 mm</option>
-                                                <option value="400">400 mm</option>
-                                            </select>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <div>
+                                                <label for="solverToteFaceInput" class="input-label">Face (W)</label>
+                                                <input type="number" id="solverToteFaceInput" value="450" class="input-field px-1 text-center" placeholder="mm">
+                                            </div>
+                                            <div>
+                                                <label for="solverToteDepthInput" class="input-label">Depth</label>
+                                                <input type="number" id="solverToteDepthInput" value="650" class="input-field px-1 text-center" placeholder="mm">
+                                            </div>
+                                            <div>
+                                                <label for="solverToteHeightInput" class="input-label">Height</label>
+                                                <input type="number" id="solverToteHeightInput" value="300" class="input-field px-1 text-center" placeholder="mm">
+                                            </div>
                                         </div>
                                     </div>
 
