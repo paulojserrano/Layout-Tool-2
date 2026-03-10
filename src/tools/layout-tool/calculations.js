@@ -479,8 +479,9 @@ export function calculateElevationLayout(inputs, evenDistribution = false, hasBu
             numSprinklers++;
         }
 
-        const actualGap = roundUpTo50(requiredGap);
-        currentBeamBottom = currentBeamBottom + BW + TH + actualGap;
+        const minPitch = BW + TH + requiredGap;
+        const actualPitch = roundUpTo50(minPitch);
+        currentBeamBottom = currentBeamBottom + actualPitch;
         currentToteTop = currentBeamBottom + BW + TH;
     }
 
@@ -518,9 +519,11 @@ export function calculateElevationLayout(inputs, evenDistribution = false, hasBu
             }
         }
 
-        const actualGap = roundUpTo50(requiredGap);
+        const minPitch = BW + TH + requiredGap;
+        const actualPitch = roundUpTo50(minPitch);
+
         if (i < maxN) { 
-            const nextBeamBottom = currentBeamBottom + BW + TH + actualGap;
+            const nextBeamBottom = currentBeamBottom + actualPitch;
             const nextToteTop = nextBeamBottom + BW + TH;
             if (nextToteTop > MaxLoadHeight) return { levels: capacityLayout, N: maxN, topToteHeight: topToteHeightCapacity };
             currentBeamBottom = nextBeamBottom;
